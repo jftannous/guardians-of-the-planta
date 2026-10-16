@@ -8,17 +8,17 @@ The game walks through the main concepts of NLR immune receptors in plants, one 
 
 ## How it works
 
-- Sign in with your email (a one-time link, no password), then choose a username.
+- Sign in with your Google account (one click), then choose a username.
 - A correct answer is worth 100 points, with no penalty for wrong answers.
 - Your progress is saved to your account, so you can pick up where you left off on any device.
 - The leaderboard shows the top 10 players and your own rank.
 
 ## Privacy
 
-- Your email address is used only to sign you in. It is never shown to other players.
+- Your Google account is used only to sign you in. Your email address is never shown to other players.
 - Other players can see your username and your total points.
 - Hypotheses you post on the hypothesis wall (Unknowns chapter) are visible to every signed-in player, together with your username.
 
 ## About this site
 
-This is a single static page (`index.html`) hosted on GitHub Pages. Sign-in and saved data use Firebase (Authentication and Cloud Firestore). The content is a simplified, paraphrased companion for learning. Please consult the original review and its citations for the primary literature.
+This is a single static page (`index.html`) hosted on GitHub Pages. Sign-in and saved data use Firebase (Authentication with Google sign-in, and Cloud Firestore). The content is a simplified, paraphrased companion for learning. Please consult the original review and its citations for the primary literature.

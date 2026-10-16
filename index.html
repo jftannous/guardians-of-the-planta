@@ -417,19 +417,9 @@ footer a{ color:var(--moss-deep); }
   <div class="gate-card">
     <h2>Guardians of the Planta</h2>
     <div id="gLoading"><p>Checking your sign-in…</p></div>
-    <div id="gEmail" style="display:none;">
-      <p>Sign in with your email to play. We will send you a one-time link — no password needed. Your email is never shown to other players.</p>
-      <input id="gEmailInput" type="email" placeholder="you@example.com" autocomplete="email">
-      <button id="gEmailGo">Email me a sign-in link</button>
-    </div>
-    <div id="gSent" style="display:none;">
-      <p id="gSentText"></p>
-      <button id="gSentBack" class="alt">Use a different email</button>
-    </div>
-    <div id="gConfirm" style="display:none;">
-      <p>Confirm your email address to finish signing in.</p>
-      <input id="gConfirmInput" type="email" placeholder="you@example.com" autocomplete="email">
-      <button id="gConfirmGo">Finish signing in</button>
+    <div id="gGoogle" style="display:none;">
+      <p>Sign in with your Google account to play. It takes one click, and your email address is never shown to other players.</p>
+      <button id="gGoogleGo">Continue with Google</button>
     </div>
     <div id="gName" style="display:none;">
       <p>Welcome! Choose a username. It is the only name other players will see (3–20 letters, numbers, _ or -).</p>
@@ -1007,18 +997,10 @@ const Backend = {
       this.auth.onAuthStateChanged(u => { this.uid = u ? u.uid : null; if(!done){ done = true; clearTimeout(t); res(u); } });
     });
   },
-  isLink(){ try{ return this.mode === "firebase" && this.auth.isSignInWithEmailLink(location.href); }catch(e){ return false; } },
-  savedEmail(){ try{ return localStorage.getItem("gp-signin-email"); }catch(e){ return null; } },
-  async sendLink(email){
-    await this.auth.sendSignInLinkToEmail(email, {url: location.origin + location.pathname, handleCodeInApp: true});
-    try{ localStorage.setItem("gp-signin-email", email); }catch(e){}
-  },
-  async completeLink(email){
-    const cred = await this.auth.signInWithEmailLink(email, location.href);
-    try{ localStorage.removeItem("gp-signin-email"); }catch(e){}
-    try{ history.replaceState(null, "", location.pathname); }catch(e){}
-    this.uid = cred.user.uid;
-    return cred.user;
+  signInGoogle(){
+    // called straight from the click, so the browser allows the pop-up
+    const provider = new firebase.auth.GoogleAuthProvider();
+    return this.auth.signInWithPopup(provider).then(cred => { this.uid = cred.user.uid; return cred.user; });
   },
   async signOut(){
     this.unsubscribe();
@@ -1188,7 +1170,7 @@ function renderPlayerbar(){
   bar.innerHTML = `<span>Player: <b>${esc(progress.name)}</b></span><span class="pill">${totalPoints()} pts</span><span class="pill ${m[1]}">${m[0]}</span><button id="changeName">${Backend.mode === "firebase" ? "Sign out" : "Change name"}</button>`;
   $("changeName").onclick = async () => {
     if(Backend.mode === "firebase"){
-      await Backend.signOut(); progress = emptyProgress(); initAllGames(); refreshAll(); goToTab("home"); showGate("email");
+      await Backend.signOut(); progress = emptyProgress(); initAllGames(); refreshAll(); goToTab("home"); showGate("google");
     } else showGate("local", "", progress.name);
   };
 }
@@ -1673,21 +1655,20 @@ function initAllGames(){
 }
 
 /* ======================= SIGN-IN & BOOT ======================= */
-const GATE_STEPS = ["Loading", "Email", "Sent", "Confirm", "Name", "Local"];
+const GATE_STEPS = ["Loading", "Google", "Name", "Local"];
 function showGate(step, msg, prefill){
   $("gate").classList.add("show");
   GATE_STEPS.forEach(s => { $("g" + s).style.display = (s.toLowerCase() === step) ? "" : "none"; });
   $("gMsg").textContent = msg || "";
-  const inputs = {email: "gEmailInput", confirm: "gConfirmInput", name: "gNameInput", local: "gLocalInput"};
+  const inputs = {name: "gNameInput", local: "gLocalInput"};
   if(inputs[step]){ if(prefill !== undefined) $(inputs[step]).value = prefill; setTimeout(() => $(inputs[step]).focus(), 50); }
 }
 function friendlyAuthError(e){
   const c = (e && (e.code || e.message)) || "";
-  if(c.includes("invalid-email")) return "That email address doesn't look right.";
-  if(c.includes("unauthorized-continue-uri") || c.includes("unauthorized-domain")) return "This website address isn't authorized in Firebase yet (Authentication → Settings → Authorized domains).";
-  if(c.includes("operation-not-allowed")) return "Email-link sign-in isn't switched on in Firebase yet (Authentication → Sign-in method).";
-  if(c.includes("quota")) return "Too many sign-in emails were requested today. Please try again later.";
-  if(c.includes("expired-action-code") || c.includes("invalid-action-code")) return "That sign-in link has expired or was already used. Please request a new one.";
+  if(c.includes("popup-blocked")) return "Your browser blocked the Google window. Allow pop-ups for this site, then try again.";
+  if(c.includes("popup-closed") || c.includes("cancelled-popup")) return "The Google window was closed before signing in. Please try again.";
+  if(c.includes("unauthorized-domain")) return "This website address isn't authorized in Firebase yet (Authentication → Settings → Authorized domains).";
+  if(c.includes("operation-not-allowed")) return "Google sign-in isn't switched on in Firebase yet (Authentication → Sign-in method → Google).";
   if(c.includes("network")) return "Network problem — check your connection and try again.";
   return "Something went wrong (" + (c || "unknown") + "). Please try again.";
 }
@@ -1706,23 +1687,11 @@ async function afterAuth(){
   const name = await Backend.loadName();
   if(name) await startSession(name); else showGate("name", "", "");
 }
-$("gEmailGo").onclick = async () => {
-  const email = $("gEmailInput").value.trim();
-  if(!email || !email.includes("@")){ $("gMsg").textContent = "Please type a valid email address."; return; }
-  $("gEmailGo").disabled = true; $("gMsg").textContent = "Sending…";
-  try{
-    await Backend.sendLink(email);
-    $("gSentText").textContent = "We sent a sign-in link to " + email + ". Open it on this device to continue (check your spam folder if it doesn't arrive).";
-    showGate("sent");
-  }catch(e){ showGate("email", friendlyAuthError(e)); }
-  $("gEmailGo").disabled = false;
-};
-$("gSentBack").onclick = () => showGate("email", "", "");
-$("gConfirmGo").onclick = async () => {
-  const email = $("gConfirmInput").value.trim();
-  if(!email){ $("gMsg").textContent = "Please type the email address the link was sent to."; return; }
-  try{ await Backend.completeLink(email); await afterAuth(); }
-  catch(e){ showGate("confirm", friendlyAuthError(e)); }
+$("gGoogleGo").onclick = async () => {
+  $("gGoogleGo").disabled = true; $("gMsg").textContent = "Opening Google…";
+  try{ await Backend.signInGoogle(); await afterAuth(); }
+  catch(e){ showGate("google", friendlyAuthError(e)); }
+  $("gGoogleGo").disabled = false;
 };
 $("gNameGo").onclick = async () => {
   const name = $("gNameInput").value.trim();
@@ -1740,23 +1709,15 @@ $("gLocalGo").onclick = async () => {
   if(!raw){ $("gMsg").textContent = "Please type a username to start."; return; }
   await startSession(raw);
 };
-[["gEmailInput","gEmailGo"],["gConfirmInput","gConfirmGo"],["gNameInput","gNameGo"],["gLocalInput","gLocalGo"]].forEach(([i, b]) => $(i).addEventListener("keydown", e => { if(e.key === "Enter") $(b).click(); }));
+[["gNameInput","gNameGo"],["gLocalInput","gLocalGo"]].forEach(([i, b]) => $(i).addEventListener("keydown", e => { if(e.key === "Enter") $(b).click(); }));
 
 (async function boot(){
   initAllGames(); refreshAll();
   Backend.init();
   if(Backend.mode === "firebase"){
     showGate("loading");
-    if(Backend.isLink()){
-      const em = Backend.savedEmail();
-      if(em){
-        try{ await Backend.completeLink(em); await afterAuth(); }
-        catch(e){ showGate("email", friendlyAuthError(e)); }
-      } else showGate("confirm");
-      return;
-    }
     const user = await Backend.waitForUser();
-    if(user) await afterAuth(); else showGate("email");
+    if(user) await afterAuth(); else showGate("google");
   } else {
     const name = await Backend.loadName();
     if(name) await startSession(name); else showGate("local");
