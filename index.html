@@ -1,0 +1,1767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guardians of the Planta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+  :root{
+    --ink:#1c2a1f;
+    --paper:#f2ecdc;
+    --paper-raised:#ece3cd;
+    --paper-card:#fffdf6;
+    --moss:#3f5c3a;
+    --moss-deep:#2b4126;
+    --sensor:#c9822c;
+    --sensor-soft:#f0dcb8;
+    --helper:#8b3a28;
+    --helper-soft:#ecd2c4;
+    --modulator:#3f5578;
+    --modulator-soft:#dbe1ec;
+    --effector:#79242a;
+    --line: rgba(28,42,31,0.18);
+    --line-strong: rgba(28,42,31,0.38);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:'Fraunces', Georgia, serif; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
+  em, i{ font-style:italic; }
+  a{ color: var(--moss-deep); }
+  .wrap{ max-width:980px; margin:0 auto; padding: 0 22px 90px; }
+
+  header.top{
+    max-width:980px; margin:0 auto; padding: 28px 22px 16px;
+    display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap;
+  }
+  .brand{ display:flex; flex-direction:column; gap:2px; }
+  .brand .mono{ font-size:12px; letter-spacing:0.04em; color:var(--moss-deep); }
+  .brand h1{ margin:2px 0 0; font-size: 36px; font-weight:600; letter-spacing:-0.01em; }
+  .brand h1 em{ font-style: italic; font-weight:500; color:var(--moss-deep); }
+  .cite{ text-align:right; font-family:'IBM Plex Mono'; font-size:12px; color:var(--ink); opacity:0.7; line-height:1.6; }
+
+  .nav-sticky{
+    position:sticky; top:0; z-index:20; background:var(--paper);
+    border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink);
+    padding: 10px 0;
+  }
+  nav.tabs{ max-width:980px; margin:0 auto; padding:0 22px; display:flex; gap:6px; flex-wrap:wrap; }
+  nav.tabs button{
+    font-family:'IBM Plex Mono'; font-size:12.5px; cursor:pointer;
+    background:transparent; border:1.4px solid var(--line-strong); color:var(--ink);
+    padding:8px 13px; border-radius:3px; transition: background .15s ease, color .15s ease;
+    position:relative;
+  }
+  nav.tabs button.active{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  nav.tabs button:not(.active):hover{ background:var(--paper-raised); }
+  nav.tabs button .dot{
+    display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--sensor);
+    margin-left:6px; vertical-align:middle; opacity:0;
+  }
+  nav.tabs button.visited .dot{ opacity:1; }
+
+  .panel{ display:none; padding-top:30px; }
+  .panel.active{ display:block; animation: fade .3s ease; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+
+  h2.section-title{ font-size:26px; font-weight:600; margin: 0 0 6px; }
+  h3.sub-title{ font-size:17px; font-weight:600; margin: 34px 0 4px; }
+  p.section-sub{ margin:0 0 22px; max-width:62ch; color:var(--ink); opacity:0.78; font-size:15px; }
+  p.body-text{ max-width:62ch; font-size:15px; opacity:0.9; }
+  .game-flag{
+    display:inline-block; font-family:'IBM Plex Mono'; font-size:10.5px; letter-spacing:0.03em;
+    color:var(--moss-deep); border:1px solid var(--moss-deep); border-radius:20px; padding:3px 10px;
+    margin-bottom:10px;
+  }
+
+  /* ---------- generic chip / toggle ---------- */
+  .chip{
+    display:block; width:100%; text-align:left; font-family:'Fraunces'; font-size:15px;
+    padding:11px 14px; margin-bottom:9px; border-radius:8px; border:1.5px solid var(--line-strong);
+    background:var(--paper-raised); cursor:pointer; transition: all .12s ease;
+  }
+  .chip:hover{ border-color: var(--ink); }
+  .chip.picked{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .chip.correct{ background:var(--moss); border-color:var(--moss-deep); color:#fff; cursor:default; }
+  .chip.wrong{ background:var(--effector); border-color:var(--effector); color:#fff; }
+  .chip.disabled{ opacity:0.35; pointer-events:none; }
+
+  .toggle-row{ display:flex; gap:8px; flex-wrap:wrap; margin: 4px 0 20px; }
+  .toggle-row button{
+    font-family:'IBM Plex Mono'; font-size:12.5px; padding:8px 16px; border-radius:20px;
+    border:1.3px solid var(--line-strong); background:transparent; cursor:pointer; color:var(--ink);
+  }
+  .toggle-row button.active{ background:var(--moss); border-color:var(--moss-deep); color:#fff; }
+
+  .info-card{
+    border:1.5px solid var(--ink); border-radius:10px; padding:18px 20px; margin-top:14px;
+    background:var(--paper-card); min-height:70px;
+  }
+  .info-card .role{ font-family:'IBM Plex Mono'; font-size:11px; color:var(--moss-deep); margin-bottom:6px; }
+  .info-card p{ margin:0; font-size:15.5px; }
+
+  /* ---------- sort-into-buckets game (reused across chapters) ---------- */
+  .sort-pool{ display:flex; flex-wrap:wrap; gap:8px; margin: 16px 0 20px; }
+  .sort-pool .chip{ display:inline-block; width:auto; margin-bottom:0; }
+  .sort-buckets{ display:flex; gap:14px; flex-wrap:wrap; }
+  .bucket{
+    flex:1; min-width:190px; border:1.6px dashed var(--line-strong); border-radius:10px; padding:14px;
+    cursor:pointer; background:var(--paper-card); transition: border-color .15s ease, background .15s ease;
+  }
+  .bucket:hover{ border-color:var(--ink); }
+  .bucket.bucket-wrong{ border-color:var(--effector); background:var(--helper-soft); }
+  .bucket-head{ font-family:'IBM Plex Mono'; font-size:12px; opacity:0.75; margin-bottom:8px; }
+  .bucket-items{ display:flex; flex-direction:column; gap:6px; min-height:12px; }
+  .bucket-tag{ font-size:13.5px; padding:8px 10px; border-radius:6px; background:var(--moss); color:#fff; }
+  .sort-status{ margin-top:6px; font-family:'IBM Plex Mono'; font-size:13px; }
+  .sort-explain{ font-size:14px; margin-top:4px; max-width:62ch; min-height:20px; }
+
+  /* ---------- HOME ---------- */
+  .hero-home{ padding: 6px 0 18px; border-bottom:1px dashed var(--line-strong); margin-bottom:26px; }
+  .hero-home h2{ font-size:30px; margin:0 0 10px; max-width:24ch; }
+  .progress-wrap{ margin: 26px 0 8px; }
+  .progress-label{ font-family:'IBM Plex Mono'; font-size:12px; display:flex; justify-content:space-between; margin-bottom:6px; opacity:0.75; }
+  .progress-bar-outer{ height:10px; border-radius:6px; background:var(--paper-raised); border:1px solid var(--line-strong); overflow:hidden; }
+  .progress-bar-inner{ height:100%; background:var(--moss); border-radius:6px; transition: width .4s ease; }
+
+  .badge-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:12px; margin-top:18px; }
+  .badge{ border:1.5px solid var(--line-strong); border-radius:10px; padding:14px 16px; background:var(--paper-raised); opacity:0.55; }
+  .badge.unlocked{ opacity:1; border-color:var(--moss-deep); background:var(--paper-card); }
+  .badge .b-icon{ font-size:20px; }
+  .badge .b-name{ font-weight:600; font-size:14.5px; margin:6px 0 2px; }
+  .badge .b-desc{ font-size:12.5px; opacity:0.75; }
+
+  .chapter-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(210px,1fr)); gap:12px; margin-top:10px; }
+  .chapter-card{ border:1.5px solid var(--ink); border-radius:10px; padding:16px; cursor:pointer; background:var(--paper-raised); transition: transform .12s ease; }
+  .chapter-card:hover{ transform:translateY(-2px); }
+  .chapter-card .mono{ font-size:11px; opacity:0.6; }
+  .chapter-card h4{ margin:6px 0 4px; font-size:16px; }
+  .chapter-card p{ margin:0; font-size:13px; opacity:0.75; }
+
+  /* ---------- ANATOMY ---------- */
+  .domain-row{ display:flex; align-items:stretch; gap:10px; margin: 20px 0 6px; flex-wrap:wrap; }
+  .domain{
+    flex:1; min-width:130px; cursor:pointer; border:1.5px solid var(--ink);
+    border-radius: 10px; padding:16px 14px; background:var(--paper-raised); position:relative;
+    transition: transform .15s ease, box-shadow .15s ease, order .2s ease;
+  }
+  .domain:hover{ transform:translateY(-3px); box-shadow: 0 6px 0 var(--line-strong); }
+  .domain.selected{ background:var(--moss); color:var(--paper); border-color:var(--moss-deep); }
+  .domain .tag{ font-family:'IBM Plex Mono'; font-size:10.5px; opacity:0.7; }
+  .domain h4{ margin:6px 0 0; font-size:17px; font-weight:600; }
+  .domain.nterm{ border-top:5px solid var(--sensor); }
+  .domain.nbarc{ border-top:5px solid var(--moss-deep); border-radius:50px/10px; text-align:center; }
+  .domain.lrr{ border-top:5px dashed var(--helper); }
+  .domain.id{ border-top:5px dotted var(--modulator); }
+  .id-position-caption{ font-size:13.5px; opacity:0.75; margin: 4px 0 18px; }
+  .id-examples{ display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:10px; margin-top:12px; }
+  .id-examples .ex{ border:1.3px solid var(--line-strong); border-radius:8px; padding:12px 14px; background:var(--paper-card); font-size:13.5px; }
+  .id-examples .ex b{ display:block; font-size:14.5px; margin-bottom:3px; }
+
+  /* ---------- DIVERSITY ---------- */
+  .bar-chart{ margin-top:18px; }
+  .bar-row{ display:flex; align-items:center; gap:12px; margin-bottom:14px; cursor:pointer; }
+  .bar-name{ width:150px; flex-shrink:0; font-size:14px; }
+  .bar-name .click-name{ text-decoration:underline; text-decoration-color:var(--effector); color:var(--effector); text-decoration-thickness:1.5px; }
+  .bar-row:hover .click-name{ color:#5e1c20; }
+  .bar-name .lat{ display:block; font-family:'IBM Plex Mono'; font-size:10px; opacity:0.6; font-style:italic; }
+  .bar-track{ flex:1; height:22px; background:var(--paper-raised); border:1px solid var(--line-strong); border-radius:5px; overflow:hidden; }
+  .bar-fill{ height:100%; background:var(--sensor); border-radius:5px 0 0 5px; transition: width .5s ease; }
+  .bar-count{ width:60px; text-align:right; font-family:'IBM Plex Mono'; font-size:13px; flex-shrink:0; }
+  .stat-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:14px; margin: 28px 0 8px; }
+  .stat-card{ border:1.5px solid var(--ink); border-radius:10px; padding:18px; background:var(--paper-card); }
+  .stat-card .big{ font-size:30px; font-weight:700; color:var(--moss-deep); }
+  .stat-card .label{ font-size:13px; margin:2px 0 8px; }
+  .stat-card .note{ font-size:12.5px; opacity:0.75; }
+
+  /* ---------- RECOGNITION ---------- */
+  .example-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; }
+  .example-card{ border:1.5px solid var(--line-strong); border-radius:10px; padding:14px 16px; background:var(--paper-card); }
+  .example-card h4{ margin:0 0 4px; font-size:15.5px; }
+  .example-card .host{ font-family:'IBM Plex Mono'; font-size:11px; opacity:0.6; margin-bottom:6px; display:block; }
+  .example-card p{ margin:0; font-size:13.5px; }
+
+  /* ---------- ARCHITECTURES (networks) ---------- */
+  .diagram-wrap{ border:1.5px solid var(--ink); border-radius:12px; background:var(--paper-card); padding:10px 20px 18px; }
+  .diagram-caption{ font-size:14px; text-align:center; max-width:52ch; margin:2px auto 0; opacity:0.85; }
+  .card-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; margin-top:10px; }
+  .flip-card{ perspective: 1200px; height:190px; cursor:pointer; }
+  .flip-inner{ position:relative; width:100%; height:100%; transition: transform .5s; transform-style: preserve-3d; }
+  .flip-card.flipped .flip-inner{ transform: rotateY(180deg); }
+  .flip-face{
+    position:absolute; inset:0; backface-visibility:hidden; border:1.5px solid var(--ink); border-radius:10px;
+    padding:16px; display:flex; flex-direction:column; justify-content:space-between; background:var(--paper-raised);
+  }
+  .flip-face.back{ transform: rotateY(180deg); background:var(--paper-card); }
+  .role-chip{ align-self:flex-start; font-family:'IBM Plex Mono'; font-size:10.5px; padding:3px 9px; border-radius:20px; color:#fffdf6; }
+  .role-chip.singleton{ background:var(--moss); }
+  .role-chip.sensor{ background:var(--sensor); color:#2a1c00; }
+  .role-chip.helper{ background:var(--helper); }
+  .role-chip.modulator{ background:var(--modulator); }
+  .flip-face h4{ margin:10px 0 2px; font-size:18px; }
+  .flip-face .host{ font-family:'IBM Plex Mono'; font-size:11px; opacity:0.65; }
+  .flip-face p{ font-size:13px; margin:0; line-height:1.45; }
+  .flip-hint{ font-family:'IBM Plex Mono'; font-size:10px; opacity:0.55; }
+
+  .match-board{ display:flex; gap:32px; flex-wrap:wrap; margin-top:16px; }
+  .match-col{ flex:1; min-width:220px; }
+  .match-col h4{ font-family:'IBM Plex Mono'; font-size:12px; margin:0 0 10px; opacity:0.7; }
+  .match-status{ margin-top:14px; font-family:'IBM Plex Mono'; font-size:13px; min-height:20px; }
+  .match-explain{ font-size:14px; margin-top:4px; max-width:60ch; min-height:20px; }
+
+  /* ---------- ACTIVATION ---------- */
+  .step-pool{ display:flex; flex-wrap:wrap; gap:8px; margin: 16px 0; }
+  .step-chip{
+    font-family:'IBM Plex Mono'; font-size:12.5px; padding:9px 13px; border-radius:8px;
+    border:1.4px solid var(--line-strong); background:var(--paper-raised); cursor:pointer; max-width:280px;
+  }
+  .step-chip.used{ opacity:0.3; pointer-events:none; }
+  .step-chip.flash-wrong{ background:var(--effector); color:#fff; border-color:var(--effector); }
+  .step-sequence{ display:flex; flex-direction:column; gap:6px; margin: 14px 0; }
+  .step-slot{ min-height:38px; border:1.4px dashed var(--line-strong); border-radius:8px; display:flex; align-items:center; padding:0 13px; font-family:'IBM Plex Mono'; font-size:12.5px; gap:10px; }
+  .step-slot.filled{ border-style:solid; background:var(--moss); color:#fff; border-color:var(--moss-deep); }
+  .step-slot .num{ opacity:0.6; }
+  .step-status{ font-family:'IBM Plex Mono'; font-size:13px; margin-top:8px; }
+  .pathway-block{ border:1.5px solid var(--line-strong); border-radius:10px; padding:16px 18px; margin-top:14px; background:var(--paper-card); }
+  .pathway-block h4{ margin:0 0 6px; font-size:15.5px; }
+  .pathway-block p{ margin:0; font-size:14px; }
+
+  /* ---------- ARMS RACE ---------- */
+  .arms-note{ border-left:3px solid var(--effector); padding:10px 16px; background:var(--paper-card); font-size:14px; margin: 18px 0; max-width:62ch; }
+  .organism{ font-family:'IBM Plex Mono'; font-size:11.5px; opacity:0.75; display:block; margin-top:2px; }
+
+  /* ---------- ENGINEERING ---------- */
+  .target-row{ display:flex; gap:10px; flex-wrap:wrap; margin:16px 0; }
+  .target-chip{ font-family:'IBM Plex Mono'; font-size:12.5px; padding:10px 16px; border-radius:20px; border:1.4px solid var(--line-strong); background:var(--paper-raised); cursor:pointer; }
+  .target-chip.active{ background:var(--sensor); border-color:var(--sensor); color:#2a1c00; }
+  .outcome-box{ border:1.5px solid var(--ink); border-radius:10px; padding:16px 18px; background:var(--paper-card); font-size:14.5px; min-height:60px; }
+  .piko-diagram{ display:flex; align-items:center; gap:10px; margin: 14px 0; font-family:'IBM Plex Mono'; font-size:12px; flex-wrap:wrap; }
+  .piko-slot{ border:1.5px dashed var(--modulator); border-radius:8px; padding:10px 14px; background:var(--modulator-soft); min-width:150px; text-align:center; }
+  .piko-slot.filled{ border-style:solid; background:var(--sensor-soft); border-color:var(--sensor); }
+  .piko-arrow{ opacity:0.5; }
+  .scenario-list{ display:flex; flex-direction:column; gap:10px; margin: 14px 0; }
+  .scenario{ border:1.5px solid var(--line-strong); border-radius:10px; padding:12px 16px; background:var(--paper-card); }
+  .scenario .s-text{ font-size:14.5px; margin-bottom:8px; }
+  .scenario .s-opts{ display:flex; gap:8px; }
+  .scenario .s-opts button{ font-family:'IBM Plex Mono'; font-size:12px; padding:7px 14px; border-radius:16px; border:1.4px solid var(--line-strong); background:var(--paper-raised); cursor:pointer; }
+  .scenario .s-opts button.correct{ background:var(--moss); color:#fff; border-color:var(--moss-deep); }
+  .scenario .s-opts button.wrong{ background:var(--effector); color:#fff; border-color:var(--effector); }
+  .scenario .s-opts button.disabled{ pointer-events:none; }
+  .scenario .s-explain{ font-size:13px; margin-top:8px; opacity:0.85; display:none; }
+  .nrc2-puzzle{ border:1.5px solid var(--ink); border-radius:10px; padding:18px 20px; background:var(--paper-card); margin-top:16px; }
+  .nrc2-status{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .nrc2-icon{ font-size:22px; }
+  .view-toggle{ display:inline-flex; border:1.5px solid var(--ink); border-radius:22px; overflow:hidden; margin:14px 0; }
+  .view-toggle button{ font-family:'IBM Plex Mono'; font-size:12.5px; padding:10px 18px; border:none; cursor:pointer; background:var(--paper-raised); color:var(--ink); }
+  .view-toggle button.active{ background:var(--ink); color:var(--paper); }
+  .view-toggle button.locked{ opacity:0.45; }
+  .sensor-status-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(160px,1fr)); gap:10px; margin-top:14px; }
+  .sensor-status{ border:1.5px solid var(--line-strong); border-radius:8px; padding:12px 14px; text-align:center; background:var(--paper-card); }
+  .sensor-status .name{ font-size:14px; font-weight:600; }
+  .sensor-status .state{ font-family:'IBM Plex Mono'; font-size:11.5px; margin-top:6px; padding:3px 8px; border-radius:10px; display:inline-block; }
+  .sensor-status .state.blocked{ background:var(--effector); color:#fff; }
+  .sensor-status .state.active{ background:var(--moss); color:#fff; }
+
+  /* ---------- UNKNOWNS (frontier) ---------- */
+  .frontier-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:14px; }
+  .frontier-card{ perspective:1200px; height:220px; }
+  .frontier-inner{ position:relative; width:100%; height:100%; transition: transform .5s; transform-style:preserve-3d; }
+  .frontier-card.flipped .frontier-inner{ transform: rotateY(180deg); }
+  .frontier-face{
+    position:absolute; inset:0; backface-visibility:hidden; border:1.5px solid var(--ink); border-radius:10px;
+    padding:16px; background:var(--paper-raised); cursor:pointer; display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .frontier-face.back{ transform: rotateY(180deg); background:var(--paper-card); cursor:default; }
+  .frontier-face .num{ font-family:'IBM Plex Mono'; font-size:11px; opacity:0.55; }
+  .frontier-face h4{ font-size:16.5px; margin:8px 0; }
+  .frontier-face p{ font-size:13px; margin:0 0 8px; }
+  .frontier-face textarea{ width:100%; min-height:50px; font-family:'Fraunces'; font-size:13px; border:1.3px solid var(--line-strong); border-radius:6px; padding:8px; resize:vertical; background:#fff; }
+  .frontier-face .save-btn{ margin-top:6px; font-family:'IBM Plex Mono'; font-size:11px; padding:6px 12px; border-radius:14px; border:1.3px solid var(--ink); background:var(--ink); color:var(--paper); cursor:pointer; align-self:flex-start; }
+  .save-note{ font-family:'IBM Plex Mono'; font-size:10.5px; opacity:0.6; margin-top:4px; }
+
+  /* ---------- NLREPERTOIRE ---------- */
+  .repertoire-list{ display:flex; flex-direction:column; }
+  .repertoire-item{ border-bottom: 1px solid var(--line); padding: 13px 0; }
+  .repertoire-name{
+    font-family:'Fraunces'; font-size:17px; font-weight:600; cursor:pointer;
+    color: var(--moss-deep); text-decoration: underline; text-decoration-color: var(--moss-deep);
+    text-decoration-thickness: 1.5px; display:inline-flex; align-items:center; gap:8px;
+    background:none; border:none; padding:0; text-align:left;
+  }
+  .repertoire-name:hover{ color: var(--moss); }
+  .repertoire-name .arrow{ font-family:'IBM Plex Mono'; font-size:12px; transition: transform .15s ease; display:inline-block; text-decoration:none; }
+  .repertoire-item.open .repertoire-name .arrow{ transform: rotate(90deg); }
+  .repertoire-detail{ display:none; margin-top:10px; font-size:14.5px; line-height:1.6; max-width:68ch; opacity:0.9; }
+  .repertoire-item.open .repertoire-detail{ display:block; }
+
+  /* ---------- QUIZ ---------- */
+  .quiz-box{ border:1.5px solid var(--ink); border-radius:12px; padding:26px; margin-top:4px; background:var(--paper-card); }
+  .quiz-meta{ display:flex; justify-content:space-between; font-family:'IBM Plex Mono'; font-size:12px; opacity:0.7; margin-bottom:14px; }
+  .quiz-q{ font-size:19px; font-weight:600; margin:0 0 18px; }
+  .quiz-opt{
+    display:block; width:100%; text-align:left; font-family:'Fraunces'; font-size:15px;
+    padding:12px 16px; margin-bottom:10px; border-radius:8px; border:1.5px solid var(--line-strong);
+    background:var(--paper-raised); cursor:pointer;
+  }
+  .quiz-opt:hover{ border-color:var(--ink); }
+  .quiz-opt.correct{ background:var(--moss); color:#fff; border-color:var(--moss-deep); }
+  .quiz-opt.wrong{ background:var(--effector); color:#fff; border-color:var(--effector); }
+  .quiz-opt.disabled{ pointer-events:none; }
+  .quiz-explain{ font-size:14px; margin-top:14px; padding-top:14px; border-top:1px dashed var(--line-strong); }
+  .quiz-next{ margin-top:18px; font-family:'IBM Plex Mono'; font-size:13px; padding:9px 18px; background:var(--ink); color:var(--paper); border:none; border-radius:20px; cursor:pointer; }
+  .quiz-done{ text-align:center; }
+  .quiz-done .big{ font-size:40px; font-weight:700; margin:8px 0; }
+  .best{ opacity:0.65; font-family:'IBM Plex Mono'; font-size:12px; }
+
+  footer{ margin-top:60px; padding-top:20px; border-top:1px solid var(--line); font-size:13px; opacity:0.65; max-width:62ch; }
+  @media (max-width:600px){
+    .match-board{ flex-direction:column; }
+    .bar-name{ width:110px; font-size:12.5px; }
+  }
+
+
+/* ================= NEW (v4) ================= */
+.dim{ opacity:0.6; }
+nav.tabs button.locked{ opacity:0.5; }
+nav.tabs button .lk{ font-size:11px; }
+.playerbar{ max-width:980px; margin:6px auto 0; padding:0 22px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-family:'IBM Plex Mono'; font-size:12px; }
+.playerbar .pill{ border:1.2px solid var(--line-strong); border-radius:20px; padding:3px 10px; }
+.playerbar .pill.shared{ background:var(--moss); color:#fff; border-color:var(--moss-deep); }
+.playerbar button{ font-family:'IBM Plex Mono'; font-size:11.5px; background:none; border:none; text-decoration:underline; cursor:pointer; color:var(--ink); }
+
+.gate{ position:fixed; inset:0; background:rgba(242,236,220,0.97); z-index:100; display:none; align-items:center; justify-content:center; padding:20px; }
+.gate.show{ display:flex; }
+.gate-card{ background:var(--paper-card); border:2px solid var(--ink); border-radius:14px; padding:30px 28px; max-width:420px; width:100%; }
+.gate-card h2{ margin:0 0 6px; font-size:26px; }
+.gate-card p{ margin:0 0 16px; font-size:14.5px; opacity:0.85; }
+.gate-card input{ width:100%; font-family:'Fraunces'; font-size:17px; padding:12px 14px; border:1.5px solid var(--ink); border-radius:8px; margin-bottom:12px; background:#fff; }
+.gate-card button{ width:100%; font-family:'IBM Plex Mono'; font-size:14px; padding:12px; background:var(--ink); color:var(--paper); border:none; border-radius:22px; cursor:pointer; }
+.gate-card button.alt{ background:transparent; color:var(--ink); border:1.5px solid var(--ink); margin-top:4px; }
+.gate-card .mode-note{ font-family:'IBM Plex Mono'; font-size:11.5px; opacity:0.7; margin-top:12px; margin-bottom:0; }
+
+.toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--paper); padding:12px 20px; border-radius:24px; font-family:'IBM Plex Mono'; font-size:13px; opacity:0; pointer-events:none; transition:all .25s ease; z-index:90; max-width:90vw; text-align:center; }
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+.hero-text{ font-size:19px; line-height:1.6; max-width:60ch; margin:0 0 6px; }
+.pts-pill{ font-family:'IBM Plex Mono'; font-size:12px; font-weight:500; border:1.3px solid var(--moss-deep); color:var(--moss-deep); border-radius:20px; padding:3px 12px; margin-left:8px; }
+.prog-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(215px,1fr)); gap:12px; margin-top:10px; }
+.prog-card{ border:1.5px solid var(--ink); border-radius:10px; padding:14px 15px; background:var(--paper-card); cursor:pointer; transition:transform .12s ease; }
+.prog-card:hover{ transform:translateY(-2px); }
+.prog-card.locked{ background:var(--paper-raised); opacity:0.6; cursor:not-allowed; }
+.prog-card.locked:hover{ transform:none; }
+.prog-card .n{ font-family:'IBM Plex Mono'; font-size:11px; opacity:0.6; }
+.prog-card h4{ margin:4px 0 2px; font-size:16px; }
+.prog-card p{ margin:0 0 9px; font-size:12.5px; opacity:0.75; line-height:1.4; }
+.prog-card .status{ font-family:'IBM Plex Mono'; font-size:10.5px; letter-spacing:0.04em; margin-bottom:4px; }
+.prog-card .status.complete{ color:var(--moss-deep); font-weight:600; }
+.pbar{ height:9px; border-radius:6px; background:var(--paper-raised); border:1px solid var(--line-strong); overflow:hidden; }
+.pfill{ height:100%; transition:width .4s ease; }
+.pf-red{ background:#c9534f; } .pf-orange{ background:#f2b765; } .pf-lgreen{ background:#a8cf86; } .pf-dgreen{ background:#2f7a3a; }
+.pmeta{ font-family:'IBM Plex Mono'; font-size:10.5px; margin-top:4px; opacity:0.75; }
+
+.chip.answered{ pointer-events:none; }
+.bucket-tag{ background:var(--moss); }
+.bucket.bucket-right{ border-color:var(--moss-deep); background:#e3efd8; }
+.replay-btn{ font-family:'IBM Plex Mono'; font-size:11.5px; padding:6px 14px; border-radius:16px; border:1.3px solid var(--ink); background:transparent; cursor:pointer; margin-left:10px; color:var(--ink); }
+.replay-btn:hover{ background:var(--paper-raised); }
+.lock-note{ border:1.5px dashed var(--line-strong); border-radius:10px; padding:16px 18px; font-size:14px; opacity:0.75; background:var(--paper-raised); }
+.start-btn{ font-family:'IBM Plex Mono'; font-size:13px; padding:10px 20px; border-radius:22px; border:none; background:var(--ink); color:var(--paper); cursor:pointer; }
+
+.type-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin: 6px 0 18px; }
+.type-card{ border:1.5px solid var(--ink); border-radius:10px; padding:15px 17px; background:var(--paper-card); }
+.type-card h4{ margin:0 0 6px; font-size:16.5px; }
+.type-card p{ margin:0; font-size:14px; }
+.type-card.t-direct{ border-top:5px solid var(--sensor); } .type-card.t-guard{ border-top:5px solid var(--helper); } .type-card.t-decoy{ border-top:5px solid var(--modulator); }
+
+.step-slot.filled.missed{ background:var(--moss); }
+.know-btns{ display:flex; gap:12px; margin: 4px 0 8px; flex-wrap:wrap; }
+.know-btn{ flex:1; min-width:150px; font-family:'Fraunces'; font-size:17px; padding:16px; border-radius:12px; border:1.8px solid var(--line-strong); background:var(--paper-raised); cursor:pointer; }
+.know-btn:hover{ border-color:var(--ink); }
+.know-btn.correct{ background:var(--moss); color:#fff; border-color:var(--moss-deep); }
+.know-btn.wrong{ background:var(--effector); color:#fff; border-color:var(--effector); }
+.know-btn.disabled{ pointer-events:none; }
+.hyp-box textarea, .wall-item textarea{ width:100%; min-height:64px; font-family:'Fraunces'; font-size:14px; border:1.3px solid var(--line-strong); border-radius:8px; padding:10px; background:#fff; resize:vertical; }
+.hyp-box{ margin-top:12px; }
+.small-btn{ font-family:'IBM Plex Mono'; font-size:11.5px; padding:6px 14px; border-radius:14px; border:1.3px solid var(--ink); background:var(--ink); color:var(--paper); cursor:pointer; margin-top:6px; }
+.save-flag{ font-family:'IBM Plex Mono'; font-size:11px; margin-left:8px; opacity:0.7; }
+
+.wall-item{ border:1.5px solid var(--line-strong); border-radius:10px; padding:14px 16px; margin-bottom:12px; background:var(--paper-card); }
+.wall-item h4{ margin:0 0 4px; font-size:15.5px; }
+.wall-item .wq{ font-size:13px; opacity:0.75; margin:0 0 10px; }
+.wall-others{ margin-top:12px; border-top:1px dashed var(--line-strong); padding-top:10px; }
+.wall-post{ font-size:13.5px; margin-bottom:8px; white-space:pre-wrap; }
+.wall-post b{ font-family:'IBM Plex Mono'; font-size:11.5px; color:var(--moss-deep); display:block; }
+
+.board-table{ width:100%; border-collapse:collapse; font-size:15px; }
+.board-table th{ font-family:'IBM Plex Mono'; font-size:11px; text-align:left; opacity:0.6; padding:6px 8px; border-bottom:1.5px solid var(--ink); }
+.board-table td{ padding:9px 8px; border-bottom:1px solid var(--line); }
+.board-table tr.gap td{ text-align:center; opacity:0.5; letter-spacing:0.3em; border-bottom:none; }
+.board-table tr.me td{ background:#e3efd8; font-weight:600; }
+.board-table td.pts{ font-family:'IBM Plex Mono'; text-align:right; }
+.board-note{ font-family:'IBM Plex Mono'; font-size:11.5px; opacity:0.7; margin: 0 0 12px; }
+footer .apa{ margin-top:10px; padding-left:22px; text-indent:-22px; }
+footer a{ color:var(--moss-deep); }
+</style>
+</head>
+<body>
+
+<!-- ============ SIGN-IN GATE ============ -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <h2>Guardians of the Planta</h2>
+    <div id="gLoading"><p>Checking your sign-in…</p></div>
+    <div id="gEmail" style="display:none;">
+      <p>Sign in with your email to play. We will send you a one-time link — no password needed. Your email is never shown to other players.</p>
+      <input id="gEmailInput" type="email" placeholder="you@example.com" autocomplete="email">
+      <button id="gEmailGo">Email me a sign-in link</button>
+    </div>
+    <div id="gSent" style="display:none;">
+      <p id="gSentText"></p>
+      <button id="gSentBack" class="alt">Use a different email</button>
+    </div>
+    <div id="gConfirm" style="display:none;">
+      <p>Confirm your email address to finish signing in.</p>
+      <input id="gConfirmInput" type="email" placeholder="you@example.com" autocomplete="email">
+      <button id="gConfirmGo">Finish signing in</button>
+    </div>
+    <div id="gName" style="display:none;">
+      <p>Welcome! Choose a username. It is the only name other players will see (3–20 letters, numbers, _ or -).</p>
+      <input id="gNameInput" type="text" maxlength="20" placeholder="Username" autocomplete="off">
+      <button id="gNameGo">Start playing</button>
+    </div>
+    <div id="gLocal" style="display:none;">
+      <p>Pick a username to play. No email is needed on a local copy.</p>
+      <input id="gLocalInput" type="text" maxlength="24" placeholder="Username" autocomplete="off">
+      <button id="gLocalGo">Start playing</button>
+    </div>
+    <p class="mode-note" id="gMsg"></p>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<header class="top">
+  <div class="brand">
+    <h1>Guardians of the <em>Planta</em></h1>
+  </div>
+  <div class="cite">Contreras, Lüdke et al. (2023)<br>PMID: 37602936<br><a href="https://doi.org/10.15252/embr.202357495" target="_blank" rel="noopener">doi.org/10.15252/embr.202357495</a></div>
+</header>
+
+<div class="nav-sticky">
+  <nav class="tabs" id="tabsNav">
+    <button data-tab="home" class="active">Home</button>
+    <button data-tab="anatomy">1 · NLRchitecture</button>
+    <button data-tab="diversity">2 · Diversity</button>
+    <button data-tab="recognition">3 · Recognition</button>
+    <button data-tab="networks">4 · NLR Types</button>
+    <button data-tab="activation">5 · Activation</button>
+    <button data-tab="armsrace">6 · Arms Race</button>
+    <button data-tab="engineering">7 · Engineering</button>
+    <button data-tab="frontier">8 · Unknowns</button>
+    <button data-tab="glossary">NLRepertoire</button>
+    <button data-tab="quiz">Quiz</button>
+  </nav>
+  <div class="playerbar" id="playerbar"></div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ HOME ============ -->
+  <section class="panel active" id="panel-home">
+    <div class="hero-home">
+      <p class="hero-text">After reading the review, test your understanding of NLR biology in Guardians of the Planta. Unlock new levels by completing a practical at the end of each. You will earn badges as you go and finish with a comprehensive 10-question quiz. A correct answer is worth 100 points with no penalties for incorrect ones. Track your cumulative score on the leaderboard and see how you rank against other players.</p>
+    </div>
+    <h3 class="sub-title">Progress <span class="pts-pill" id="totalPts">0 pts</span></h3>
+    <div class="prog-grid" id="progGrid"></div>
+    <h3 class="sub-title">Badges</h3>
+    <div class="badge-grid" id="badgeGrid"></div>
+  </section>
+
+  <!-- ============ 1. NLRCHITECTURE ============ -->
+  <section class="panel" id="panel-anatomy">
+    <h2 class="section-title">Architecture of an NLR</h2>
+    <p class="section-sub">NLRs exhibit a conserved tripartite modular domain architecture. Click a segment to read what each domain does.</p>
+
+    <div class="toggle-row" id="ntermToggle"></div>
+    <div class="domain-row" id="domainRow">
+      <div class="domain nterm selected" data-domain="nterm"><div class="tag">N‑TERMINAL DOMAIN</div><h4 id="ntermLabel">CC</h4></div>
+      <div class="domain nbarc" data-domain="nbarc"><div class="tag">NB‑ARC</div><h4>NOD</h4></div>
+      <div class="domain lrr" data-domain="lrr"><div class="tag">C‑TERMINAL SSFR</div><h4>LRR</h4></div>
+      <div class="domain id" data-domain="id"><div class="tag">OPTIONAL</div><h4>Integrated Domain</h4></div>
+    </div>
+    <p class="id-position-caption" id="idPositionCaption"></p>
+    <div class="toggle-row" id="idPositionToggle"></div>
+    <div class="info-card"><div class="role" id="infoRole">N‑terminal domain</div><p id="infoText"></p></div>
+
+    <h3 class="sub-title">Integrated domains in the wild</h3>
+    <p class="section-sub">Up to 10% of a plant's NLRs carry a bonus domain that mimics a real pathogen target — bait sewn into the receptor itself, and not always in the same place.</p>
+    <div class="id-examples">
+      <div class="ex"><b>Pik‑1 — HMA domain</b>Sits between the N‑terminal CC domain and NB‑ARC. Binds the effectors AVR‑Pik / AVR‑Mgk1 of the rice blast fungus (<i>Magnaporthe oryzae</i>).</div>
+      <div class="ex"><b>RGA5 — HMA domain</b>Sits after the LRR, at the very C‑terminus. Binds AVR1‑CO39 / AVR‑Pia, sequence‑unrelated effectors sharing a MAX fold (rice).</div>
+      <div class="ex"><b>RRS1 — WRKY domain</b>Also C‑terminal, after the LRR. Baits AvrRps4 and PopP2, which normally target real host WRKY transcription factors (<i>Arabidopsis</i>).</div>
+      <div class="ex"><b>Pia/Pias series — 9 variants</b>The same NLR locus carries at least nine different integrations across <i>Oryza</i> species — HMA, kinase, WRKY and more.</div>
+    </div>
+
+    <h3 class="sub-title">Domain Detective <span class="game-flag">PRACTICAL · 100 pts each</span></h3>
+    <p class="section-sub">Read the clue, click which of the four parts it describes. One guess per clue.</p>
+    <div class="quiz-box" id="domainQuizBox"></div>
+  </section>
+
+  <!-- ============ 2. DIVERSITY ============ -->
+  <section class="panel" id="panel-diversity">
+    <h2 class="section-title">How many NLRs does a plant need?</h2>
+    <p class="section-sub">NLR‑encoding genes are among the fastest‑evolving in the plant genome, and species differ enormously in how many they carry. Before the data is revealed, test what you took from the review.</p>
+
+    <h3 class="sub-title">Sort the Genomes <span class="game-flag">PRACTICAL · 100 pts each</span></h3>
+    <p class="section-sub">Pick a species, then drop it in the bucket where its NLR count belongs. One guess per species.</p>
+    <div class="sort-pool" id="diversityPool"></div>
+    <div class="sort-buckets" id="diversityBuckets"></div>
+    <div class="sort-status" id="diversityStatus"></div>
+    <div class="sort-explain" id="diversityExplain"></div>
+
+    <div class="lock-note" id="divLock" style="margin-top:22px;">Finish the practical above to reveal the data.</div>
+    <div id="divReveal" style="display:none;">
+      <h3 class="sub-title">The data</h3>
+      <p class="section-sub">Species names are clickable — try one for a quick note on why it landed where it did. Bars use a log scale.</p>
+      <div class="bar-chart" id="barChart"></div>
+      <div class="info-card" id="diversityInfo">
+        <div class="role">Click a species above</div>
+        <p>NLR count varies more than 20‑fold between species, largely driven by tandem duplication, transposon activity, and — in polyploid crops — whole‑genome duplication.</p>
+      </div>
+      <h3 class="sub-title">In numbers</h3>
+      <div class="stat-grid" id="statGrid"></div>
+    </div>
+  </section>
+
+  <!-- ============ 3. RECOGNITION ============ -->
+  <section class="panel" id="panel-recognition">
+    <h2 class="section-title">How does an NLR “see” a pathogen?</h2>
+    <p class="section-sub">There are two broad strategies: direct recognition and indirect recognition, and indirect recognition splits into two models.</p>
+    <div class="type-grid">
+      <div class="type-card t-direct"><h4>Direct recognition</h4><p>The NLR itself physically binds the effector — through its LRR or another domain, including an integrated domain fused into the receptor.</p></div>
+      <div class="type-card t-guard"><h4>Indirect: guard–guardee</h4><p>The NLR (the guard) monitors a host protein (the guardee) that effectors normally modify to promote infection. It senses the modification, not the effector itself.</p></div>
+      <div class="type-card t-decoy"><h4>Indirect: decoy</h4><p>The NLR monitors a host protein (the decoy) that mimics an effector target but has no role of its own — it exists to bait the effector and trigger immunity when modified.</p></div>
+    </div>
+
+    <h3 class="sub-title">Classify the Receptors <span class="game-flag">PRACTICAL · 100 pts each</span></h3>
+    <p class="section-sub">Sort each receptor by how it recognizes its pathogen. One guess per receptor.</p>
+    <div class="sort-pool" id="recogPool"></div>
+    <div class="sort-buckets" id="recogBuckets"></div>
+    <div class="sort-status" id="recogStatus"></div>
+    <div class="sort-explain" id="recogExplain"></div>
+  </section>
+
+  <!-- ============ 4. NLR TYPES ============ -->
+  <section class="panel" id="panel-networks">
+    <h2 class="section-title">Singletons, pairs &amp; networks</h2>
+    <p class="section-sub">Over evolutionary time, single multitasking receptors have repeatedly split into specialized sensor/helper duos — and sometimes whole networks. Toggle the three types below.</p>
+    <div class="toggle-row" id="archToggle"></div>
+    <div class="diagram-wrap">
+      <div id="diagramSvgWrap"></div>
+      <p class="diagram-caption" id="diagramCaption"></p>
+    </div>
+
+    <h3 class="sub-title">Classify the NLRs <span class="game-flag">PRACTICAL · 100 pts each</span></h3>
+    <p class="section-sub">Sort each receptor (or receptor group) into singleton, pair, or network. One guess each.</p>
+    <div class="sort-pool" id="archPool"></div>
+    <div class="sort-buckets" id="archBuckets"></div>
+    <div class="sort-status" id="archStatus"></div>
+    <div class="sort-explain" id="archExplain"></div>
+
+    <h3 class="sub-title">Specimen cards</h3>
+    <div class="lock-note" id="cardsLock">Complete “Classify the NLRs” to open the specimen cards.</div>
+    <div id="cardsWrap" style="display:none;">
+      <p class="section-sub">Nine receptors from the review. Click a card to flip it. They hide when you start the matchmaker below.</p>
+      <div class="card-grid" id="specimenGrid"></div>
+    </div>
+
+    <h3 class="sub-title">Sensor–Helper Matchmaker <span class="game-flag">PRACTICAL · 100 pts each</span></h3>
+    <div class="lock-note" id="mmLock">Complete “Classify the NLRs” to unlock the matchmaker.</div>
+    <div id="mmWrap" style="display:none;">
+      <p class="section-sub">Pick a sensor, then pick the helper it actually signals through. One card is a trap. One guess each.</p>
+      <button class="start-btn" id="mmStart">Start the matchmaker (hides the specimen cards)</button>
+      <div id="mmBoard" style="display:none;">
+        <div class="match-board">
+          <div class="match-col"><h4>SENSORS (pick one)</h4><div id="sensorCol"></div></div>
+          <div class="match-col"><h4>HELPERS / OUTCOMES</h4><div id="helperCol"></div></div>
+        </div>
+        <div class="match-status" id="matchStatus"></div>
+        <div class="match-explain" id="matchExplain"></div>
+      </div>
+    </div>
+
+    <h3 class="sub-title">Bonus question <span class="game-flag">300 pts</span></h3>
+    <div class="lock-note" id="bonusLock">Finish the matchmaker to unlock the bonus question.</div>
+    <div id="bonusWrap" style="display:none;">
+      <div class="quiz-box" id="bonusBox"></div>
+    </div>
+  </section>
+
+  <!-- ============ 5. ACTIVATION ============ -->
+  <section class="panel" id="panel-activation">
+    <h2 class="section-title">From perception to cell death</h2>
+    <p class="section-sub">Upon pathogen perception, NLRs trigger a potent broad-spectrum immune reaction, usually accompanied by a form of programmed cell death termed the hypersensitive response. Cryo‑EM has revealed how activated NLRs assemble into oligomeric <em>resistosomes</em>. Put ZAR1's activation steps in the right order.</p>
+
+    <h3 class="sub-title">Resistosome Assembly <span class="game-flag">PRACTICAL · 100 pts each</span></h3>
+    <div class="step-pool" id="stepPool"></div>
+    <div class="step-sequence" id="stepSequence"></div>
+    <div class="step-status" id="stepStatus"></div>
+
+    <h3 class="sub-title">Two more activation routes</h3>
+    <div class="pathway-block">
+      <h4>NRC network — “activation‑and‑release”</h4>
+      <p>A sensor NLR (e.g. Rx, Bs2) perceives its effector and relays a signal to a downstream helper NRC — but the sensor itself never oligomerizes. Only the helper (NRC2/3/4) forms the resistosome and moves to the plasma membrane.</p>
+    </div>
+    <div class="pathway-block">
+      <h4>NRG1 / ADR1 network — TIR‑NLR relay</h4>
+      <p>Activated TIR‑NLRs form tetrameric resistosomes that act as enzymes, producing small molecules sensed by EDS1–PAD4 or EDS1–SAG101 complexes. Those complexes then trigger oligomerization of the CCR helpers ADR1 and NRG1, which act as calcium channels.</p>
+    </div>
+    <h3 class="sub-title">The regulators</h3>
+    <p class="section-sub">Not every NLR senses or signals — some just keep the network in check.</p>
+    <div class="card-grid" id="modulatorGrid"></div>
+  </section>
+
+  <!-- ============ 6. ARMS RACE ============ -->
+  <section class="panel" id="panel-armsrace">
+    <h2 class="section-title">When pathogens suppress the suppressors</h2>
+    <p class="section-sub">Some effectors don't trigger immunity — they shut it down. Match each effector to how it disables its target.</p>
+    <h3 class="sub-title">Effector Match <span class="game-flag">PRACTICAL · 100 pts each</span></h3>
+    <div class="match-board">
+      <div class="match-col"><h4>EFFECTORS (pick one)</h4><div id="effectorCol"></div></div>
+      <div class="match-col"><h4>MECHANISM / TARGET</h4><div id="targetCol"></div></div>
+    </div>
+    <div class="match-status" id="armsStatus"></div>
+    <div class="match-explain" id="armsExplain"></div>
+    <div class="arms-note">Targeting a <em>helper</em> NLR is an efficient virulence strategy: shutting down one node like NRC2/NRC3 can simultaneously compromise many upstream sensors and cell‑surface receptors at once. This may also mean crop genomes carry “cryptic” resistance genes, silently masked by an effector we haven't identified yet.</div>
+  </section>
+
+  <!-- ============ 7. ENGINEERING ============ -->
+  <section class="panel" id="panel-engineering">
+    <h2 class="section-title">Bioengineering the immune system</h2>
+    <p class="section-sub">Two real strategies from the review — one gives NLRs new targets, the other restores ones pathogens have already defeated.</p>
+
+    <h3 class="sub-title">Build a pikobody <span class="game-flag">PRACTICAL · 100 pts each</span></h3>
+    <p class="body-text">Pik‑1's integrated HMA domain can be swapped for a camelid nanobody, giving it an entirely synthetic recognition specificity while it still signals through its native helper, Pik‑2. Choose a nanobody to install, then predict how your engineered receptor handles four scenarios. One guess each.</p>
+    <div class="piko-diagram">
+      <div class="piko-slot">CC</div><span class="piko-arrow">→</span>
+      <div class="piko-slot" id="pikoSlot">HMA (unmodified)</div><span class="piko-arrow">→</span>
+      <div class="piko-slot">NB‑ARC</div><span class="piko-arrow">→</span>
+      <div class="piko-slot">LRR</div><span class="piko-arrow">→</span>
+      <div class="piko-slot">Pik‑2 (helper)</div>
+    </div>
+    <div class="target-row" id="targetRow"></div>
+    <div class="scenario-list" id="pikoScenarios"></div>
+    <div class="sort-status" id="pikoStatus"></div>
+
+    <h3 class="sub-title">Engineer NRC2 <span class="game-flag">PRACTICAL · 100 pts</span></h3>
+    <p class="body-text">The nematode effector SS15 locks the helper NRC2 shut by binding its NB‑ARC domain. Pick the engineering strategy that rescues it — based on where SS15 really binds. One guess.</p>
+    <div class="nrc2-puzzle">
+      <div class="nrc2-status"><span class="nrc2-icon" id="nrc2Icon">🔒</span><span class="mono" id="nrc2StatusText">NRC2 (wild‑type) — locked shut by SS15</span></div>
+      <div id="nrc2Options"></div>
+      <div class="sort-explain" id="nrc2Explain"></div>
+      <div class="view-toggle" id="resurrectSwitch">
+        <button data-variant="wt" class="active">Wild‑type NRC2</button>
+        <button data-variant="eng">Engineered NRC2</button>
+      </div>
+      <p class="body-text" style="font-size:13.5px; opacity:0.7; margin-top:-6px;">SS15 is present in both views — compare what happens downstream.</p>
+      <div class="sensor-status-grid" id="sensorStatusGrid"></div>
+    </div>
+  </section>
+
+  <!-- ============ 8. UNKNOWNS ============ -->
+  <section class="panel" id="panel-frontier">
+    <h2 class="section-title">What we still don't know</h2>
+    <p class="section-sub">Some questions in NLR biology are solved; others are still wide open. For each card, decide which it is — one card at a time.</p>
+    <h3 class="sub-title">Solved or Still Open? <span class="game-flag">PRACTICAL · 100 pts each</span></h3>
+    <div class="quiz-box" id="knowBox"></div>
+
+    <h3 class="sub-title">Hypothesis wall</h3>
+    <div class="lock-note" id="wallLock">Finish “Solved or Still Open?” to unlock the hypothesis wall.</div>
+    <div id="wallWrap" style="display:none;">
+      <p class="section-sub">The review ends with seven open questions. Share your hypothesis for any of them. <span id="wallNote"></span></p>
+      <div id="wallList"></div>
+    </div>
+  </section>
+
+  <!-- ============ NLREPERTOIRE ============ -->
+  <section class="panel" id="panel-glossary">
+    <h2 class="section-title">NLRepertoire</h2>
+    <p class="section-sub">No quiz here — this chapter is simply a compilation of all the NLRs named in the review. Click on an NLR to learn more about it.</p>
+    <div class="repertoire-list" id="repertoireList"></div>
+  </section>
+
+  <!-- ============ QUIZ ============ -->
+  <section class="panel" id="panel-quiz">
+    <h2 class="section-title">Final Quiz</h2>
+    <p class="section-sub">Ten questions drawn from a larger pool, freshly shuffled each round. 100 points per correct answer, no penalties. Your best score counts.</p>
+    <div class="quiz-box" id="quizBox"></div>
+
+    <h3 class="sub-title">Leaderboard</h3>
+    <p class="board-note" id="boardNote"></p>
+    <div id="boardBody"></div>
+  </section>
+
+  <footer>
+    Built as a companion to Contreras, Lüdke et al., “NLR receptors in plant immunity: making sense of the alphabet soup” (2023), PMID: 37602936 — an open‑access review. All content here is a simplified, paraphrased companion for learning; consult the original paper and its citations for the primary literature.
+    <div class="apa">Contreras, M. P., Lüdke, D., Pai, H., Toghani, A., &amp; Kamoun, S. (2023). NLR receptors in plant immunity: making sense of the alphabet soup. EMBO reports, 24(10), e57495. <a href="https://doi.org/10.15252/embr.202357495" target="_blank" rel="noopener">https://doi.org/10.15252/embr.202357495</a></div>
+  </footer>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* ======================= DATA BLOCKS (reused) ======================= */
+const nlrepertoire = [
+  {name:"ADR1", detail:"Helper NLR (CCR‑type) in the NRG1/ADR1 network, downstream of TIR‑NLR sensors, alongside helper counterpart NRG1. Host: <i>Arabidopsis thaliana</i>. Activated via EDS1–PAD4 complexes after TIR‑NLR firing; oligomerizes into a resistosome acting as a Ca²⁺ channel. Its paralogs ADR1‑L1 and ADR1‑L2 (but not plain ADR1) are degraded by the effector AvrPtoB from a bacterial pathogen; ADR1 itself is insensitive to AvrPtoB and can be activated via the sensor NLR SNC1 as a backup route."},
+  {name:"Bs2", detail:"Sensor NLR in the Solanaceous NRC network; signals indistinctly through helpers NRC2, NRC3, or NRC4. Described in the review as \"the bacterial R protein Bs2\" — host plant and target pathogen are not explicitly stated in the review text."},
+  {name:"CSA1 / CHS3", detail:"A TIR‑NLR pair in <i>Arabidopsis thaliana</i>; the review doesn't specify which is sensor vs. helper. Guards BAK1–BIR3 homeostasis; CSA1‑dependent cell death is triggered upon sensing perturbation of this complex, including in response to the microbial pattern pg23."},
+  {name:"DM1", detail:"TIR‑NLR (allele DM1<sup>Uk‑3</sup>), <i>Arabidopsis thaliana</i>. Not pathogen‑triggered — instead forms an incompatible heterocomplex with DM2d when genetically distinct <i>Arabidopsis</i> populations are crossed, causing autoimmune \"hybrid necrosis\" (Dangerous Mix)."},
+  {name:"DM2d", detail:"TIR‑NLR (allele DM2d<sup>Uk‑1</sup>), <i>Arabidopsis thaliana</i>. Counterpart to DM1 in the same hybrid‑necrosis mechanism; the two genes sit on different chromosomes."},
+  {name:"MLA", detail:"Allelic series of likely functional singleton NLRs (CC‑type), based on their ability to trigger cell death in heterologous systems. Host not restated at this specific mention in the review (well known elsewhere as barley, <i>Hordeum vulgare</i>, based on naming convention)."},
+  {name:"NRC1", detail:"Helper NLR of the Solanaceous NRC network. Host: tomato (<i>Solanum lycopersicum</i>). Suppressed by the effector SS15 from <i>Globodera rostochiensis</i>, alongside NRC2 and NRC3."},
+  {name:"NRC2", detail:"Helper NLR, central node of the NRC network. Host: <i>Nicotiana benthamiana</i>. Activated by sensor NLRs including Rx, Bs2, Rpi‑amr1, and Rpi‑amr3, conferring resistance against <i>Potato virus X</i>, a bacterial pathogen (via Bs2), and <i>Phytophthora infestans</i> (via Rpi‑amr1). Mode of action: oligomerizes into a pentamer‑sized resistosome upon sensor activation (\"activation‑and‑release\"), then relocalizes from cytoplasm to plasma membrane. Suppressed by the effectors SS15 (from <i>Globodera rostochiensis</i>, binds NB‑ARC directly to block oligomerization) and AVRcap1b (from <i>Phytophthora infestans</i>, acts indirectly via host protein NbTOL9a). Negatively regulated by the modulator NLR NRCX."},
+  {name:"NRC3", detail:"Helper NLR, NRC network. Host: <i>Nicotiana benthamiana</i>. Identified as the primary helper required for hypersensitive cell death mediated by the tomato cell‑surface receptors Cf‑4/Cf‑9/Cf‑2/Cf‑5 (recognizing <i>Cladosporium fulvum</i> effectors) and Ve1 (recognizing <i>Verticillium</i> spp. effector Ave1) — though these receptors are not NLRs themselves. Suppressed by SS15 and AVRcap1b, same as NRC2. Negatively regulated by NRCX."},
+  {name:"NRC4", detail:"Helper NLR, NRC network. Host: <i>Nicotiana benthamiana</i>. Required specifically by the sensor Rpi‑blb2 (not NRC2), conferring resistance to <i>Phytophthora infestans</i> strains carrying effector AVRblb2. Mode of action: focally accumulates at the extra‑haustorial membrane during <i>Phytophthora infestans</i> infection (a localization pattern not shared by NRC2 or ZAR1); not suppressed by SS15 or AVRcap1b, making it a \"backup\" node when NRC2/NRC3 are suppressed."},
+  {name:"NRC7", detail:"Helper NLR, NRC family. Host: <i>Nicotiana benthamiana</i>. Mainly expressed in roots rather than leaves or flowers; no pathogen/mode‑of‑action detail given in the review."},
+  {name:"NRC8", detail:"Helper NLR, NRC family. Host: <i>Nicotiana benthamiana</i>. Also mainly root‑expressed; no further functional detail given in the review."},
+  {name:"NRCX", detail:"Modulator NLR — phylogenetically related to NRC2/NRC3 but not a conventional sensor or helper. Host: <i>Nicotiana benthamiana</i>. Mode of action: its MADA motif is nonfunctional, so it can't itself trigger cell death; instead it negatively regulates NRC2 and NRC3 (not NRC4). Silencing NRCX causes autoimmunity."},
+  {name:"NRG1", detail:"Helper NLR (CCR‑type; family NRG1A, NRG1B), acting downstream of TIR‑NLR sensors via EDS1–SAG101, paired functionally with ADR1. Host: <i>Arabidopsis thaliana</i>. Mode of action: EDS1‑SAG101 complexes trigger NRG1 oligomerization into an NRG1‑EDS1‑SAG101 resistosome acting as a Ca²⁺ channel; also required (alongside sensor pair RRS1/RPS4) for full resistance to the effector AvrRps4 from <i>Pseudomonas syringae</i>."},
+  {name:"NRG1C", detail:"Modulator NLR. Host: <i>Arabidopsis thaliana</i>. A truncated NLR lacking most of the NB‑ARC and the CCR domain; negatively regulates NRG1A/B signaling and cell death, likely by competing for EDS1–SAG101."},
+  {name:"Pbr1", detail:"Functions similarly to a singleton/guard‑type NLR (classification not explicitly labeled in the review). Host: barley (<i>Hordeum vulgare</i>). Guards PBS1‑like RLCKs to recognize the bacterial effector AvrPphB, convergently with the unrelated <i>Arabidopsis</i> NLR RPS5."},
+  {name:"Pia / Pias", detail:"A variable, allelic/ortholog NLR series in the <i>Oryza</i> genus carrying at least nine different integrated domains across variants (HMA, protein‑kinase, WRKY domains), illustrating how flexible NLR‑ID evolution can be. RGA5 is one named member of this series (\"aka Pia‑2\")."},
+  {name:"Pik‑1", detail:"Sensor NLR, paired with helper Pik‑2. Host: rice (<i>Oryza sativa</i>, implied). Carries an integrated HMA domain; directly recognizes the effectors AVR‑Pik and AVR‑Mgk1 from the rice blast fungus, <i>Magnaporthe oryzae</i>. Cannot trigger cell death without Pik‑2; genes are transcribed from a shared, head‑to‑head promoter."},
+  {name:"Pik‑2", detail:"Helper NLR, paired with sensor Pik‑1. Host: rice. Carries the N‑terminal MADA motif that Pik‑1 lacks; executes cell death once activated by Pik‑1."},
+  {name:"Prf", detail:"Classification not explicitly stated in the review (functions as a guard without a described helper partner). Host: tomato. Guards the host kinase Pto, sensing its interaction with the bacterial effectors AvrPto and AvrPtoB."},
+  {name:"R3a", detail:"Classification and host not specified in the review (known elsewhere as a potato NLR). SGT1‑dependent; its immunity can be suppressed by the effector RipAC from <i>Ralstonia solanacearum</i>, which interferes with the SGT1 co‑chaperone required for NLR function."},
+  {name:"RGA4", detail:"Helper NLR, paired with sensor RGA5 (the Pia pair). Host: rice. Constitutively active alone, triggering cell death by default; kept suppressed by RGA5 until effector perception — regulation by repression rather than cooperation."},
+  {name:"RGA5", detail:"Sensor NLR (aka Pia‑2), paired with helper RGA4. Host: rice. Integrated HMA domain; directly recognizes AVR1‑CO39 and AVR‑Pia from <i>Magnaporthe oryzae</i>."},
+  {name:"Roq1", detail:"Functions as a singleton via direct recognition. Host: <i>Nicotiana benthamiana</i>. Directly binds the effector XopQ from <i>Xanthomonas perforans</i> via its LRR and C‑JID domain; forms a tetrameric resistosome (Cryo‑EM resolved)."},
+  {name:"Rpi‑amr1", detail:"Sensor NLR, NRC network. Host not explicitly restated in the review (an oomycete R protein; \"Rpi\" naming implies resistance to <i>Phytophthora infestans</i>). Signals through NRC2 but not NRC4 — a narrower helper‑compatibility profile than some other sensors."},
+  {name:"Rpi‑amr3", detail:"Sensor NLR, NRC network. Same naming convention as Rpi‑amr1. Signals indistinctly through NRC2, NRC3, or NRC4 — broader helper compatibility."},
+  {name:"Rpi‑blb2", detail:"Sensor NLR, NRC network; NRC4‑dependent specifically (not NRC2). Confers resistance to strains of <i>Phytophthora infestans</i> carrying the effector AVRblb2. Mode of action: during infection, co‑localizes with NRC4 at the extra‑haustorial membrane, where AVRblb2 is delivered."},
+  {name:"Rpi‑cap1", detail:"Underlying gene not yet cloned; hypothesized to be a TIR‑type NLR. Host: <i>Solanum capsicibaccatum</i>. Recognizes the effector AVRcap1b (the same effector that otherwise suppresses NRC2/NRC3) via a signaling pathway independent of the NRC network."},
+  {name:"RPM1", detail:"CC‑NLR, functions as a guard (classification beyond that not stated). Host: <i>Arabidopsis thaliana</i>. Guards RIN4, sensing its phosphorylation by the effectors AvrRpm1 or AvrB, both from <i>Pseudomonas syringae</i>. Its immune complex is also a direct target of suppression: the effector HopZ3 (also from <i>Pseudomonas syringae</i>) acetylates and inactivates it."},
+  {name:"RPP1", detail:"Functions as a singleton via direct recognition. Host: <i>Arabidopsis thaliana</i>. Directly binds the effector ATR1 from the oomycete <i>Hyaloperonospora arabidopsidis</i> via its LRR and C‑JID domain; forms a tetrameric resistosome acting as a holoenzyme."},
+  {name:"RPP7", detail:"Functional singleton (CC‑type). Host: <i>Arabidopsis thaliana</i>. Shown (alongside Sr35) to oligomerize into a pentameric resistosome, generalizing the MADA‑CC‑NLR activation mechanism; specific pathogen/effector not stated in the review."},
+  {name:"RPP13", detail:"Likely functional singleton. Host not restated at this mention (<i>Arabidopsis</i>, by \"RPP\" naming convention). No specific pathogen/effector given in the review."},
+  {name:"RPS2", detail:"CCG10‑NLR, functions as a guard. Host: <i>Arabidopsis thaliana</i>. Guards RIN4, sensing its cleavage by the effector AvrRpt2 from <i>Pseudomonas syringae</i>. Also one of two SGT1‑dependent NLRs (with R3a) suppressible by RipAC from <i>Ralstonia solanacearum</i>."},
+  {name:"RPS4", detail:"Paired with sensor RRS1; the review notes its \"helper\" label is debated, since it's a TIR‑NLR that itself also requires the unlinked helper NRG1 downstream. Host: <i>Arabidopsis thaliana</i>. Constitutively active alone; repressed by RRS1 until effector perception; contributes to resistance against the effector AvrRps4."},
+  {name:"RPS5", detail:"CCG10‑NLR, functions as a guard/likely singleton. Host: <i>Arabidopsis thaliana</i>. Guards the host kinase PBS1; senses its cleavage by the bacterial protease effector AvrPphB."},
+  {name:"RRS1", detail:"Sensor NLR (TIR‑type), paired with RPS4, additionally dependent on the unlinked helper NRG1. Host: <i>Arabidopsis thaliana</i>. Carries an integrated C‑terminal WRKY domain that baits the effectors AvrRps4 (from <i>Pseudomonas syringae</i>) and PopP2 (from <i>Ralstonia solanacearum</i>)."},
+  {name:"Rx", detail:"Sensor NLR, NRC network. Host not explicitly restated in the review (a potato R protein per general knowledge). Confers resistance to <i>Potato virus X</i> (PVX); signals through NRC2, co‑localizing with it in the cytoplasm pre‑activation and separating from it (NRC2 moves to the plasma membrane) upon activation."},
+  {name:"SNC1", detail:"TIR‑NLR, functions as a guard. Host: <i>Arabidopsis thaliana</i>. Guards the helpers ADR1‑L1/ADR1‑L2; upon detecting their suppression by the effector AvrPtoB, activates immunity via the unsuppressed helper ADR1 instead — a described backup mechanism against helper‑targeting suppression."},
+  {name:"Sr35", detail:"Functional singleton (CC‑type). Host: wheat. Directly binds the effector AvrSr35 via its LRR (pathogen species not restated in this text, though \"Sr\" naming implies wheat stem rust fungus); forms a pentameric resistosome (Cryo‑EM resolved)."},
+  {name:"Sr50", detail:"Likely functional singleton, grouped with Sr35 and others. Host not restated at this mention (wheat, by naming convention). No specific effector given in the review."},
+  {name:"Sw5‑b", detail:"Functions via direct recognition. Host: tomato. An additional N‑terminal \"Solanaceous domain\" plus the LRR directly bind the NSm viral protein of various tospoviruses (not further speciated in the text)."},
+  {name:"ZAR1", detail:"Functional singleton (CC‑type), the best structurally characterized NLR in the paper. Host: <i>Arabidopsis thaliana</i> (system also reconstituted in <i>Nicotiana benthamiana</i>). Indirectly recognizes multiple bacterial effectors via guarded/decoy RLCKs (ZED1, RKS1): senses acetylation of ZED1 by HopZ1a from <i>Xanthomonas campestris</i> pv. <i>campestris</i>, and uridylylation of PBL2 by AvrAC from <i>Pseudomonas syringae</i>. Mode of action: forms the first Cryo‑EM‑resolved resistosome — a pentameric wheel‑like oligomer whose α1‑helix (MADA motif) forms a membrane‑inserting funnel acting as a Ca²⁺ channel."}
+];
+const quizPool = [
+  {q:"What does the \"NLR\" in NLR receptor stand for?", opts:["Nucleotide‑binding Leucine‑rich Repeat","Nuclear Localization Receptor","Non‑specific Ligand Receptor","Nitrogen‑Limited Response"], correct:0, explain:"NB‑ARC (nucleotide‑binding) + LRR (leucine‑rich repeat) are the two defining domains."},
+  {q:"What is a \"resistosome\"?", opts:["An oligomeric NLR complex, like the ZAR1 pentamer","A pathogen effector complex","A plant cell wall structure","A resistance‑gene promoter"], correct:0, explain:"Coined for the ZAR1 pentamer resolved by Cryo‑EM — now used for CC‑ and TIR‑NLR oligomers alike."},
+  {q:"In the NRC network's \"activation‑and‑release\" model, which part actually oligomerizes into a resistosome?", opts:["The sensor NLR","The helper NRC","Both, together","Neither — they signal without oligomerizing"], correct:1, explain:"The sensor activates and releases a signal, but only the helper (NRC2/3/4) forms the resistosome."},
+  {q:"The nematode effector SS15 suppresses NRC2/NRC3 by...", opts:["Degrading their LRR domain","Triggering their cell death response","Binding their NB‑ARC domain to block oligomerization","Exporting them out of the cell"], correct:2, explain:"SS15 immobilizes a hinge loop in the NB‑ARC domain, locking NRC2/3 in an inactive state."},
+  {q:"What is the \"integrated decoy hypothesis\"?", opts:["Decoys are always non‑functional pseudogenes","Host effector targets became genetically fused into NLRs as bait","Effectors physically integrate into host DNA","NLRs decoy pathogens into making fake proteins"], correct:1, explain:"Seen in Pik‑1/RGA5 (integrated HMA) and RRS1 (integrated WRKY) — the ID mimics the effector's real host target."},
+  {q:"\"Pikobodies\" were engineered by replacing which part of Pik‑1?", opts:["The NB‑ARC domain","The coiled‑coil domain","The integrated HMA domain, with a nanobody","The entire LRR"], correct:2, explain:"Swapping the HMA domain for a camelid nanobody gave Pik‑1 an entirely synthetic recognition specificity, while it still signals via Pik‑2."},
+  {q:"Roughly how many NLR genes does hexaploid wheat carry, compared to watermelon's ~50?", opts:["About 100","About 500","More than 1,000","About 10"], correct:2, explain:"Wheat's three sub‑genomes (allopolyploidy) plus duplication events multiply its NLR count well past 1,000."},
+  {q:"In the guard‑guardee model, what is RIN4?", opts:["A pathogen effector","A host protein guarded by RPM1 and RPS2","A decoy kinase with no other function","An NLR itself"], correct:1, explain:"RIN4 is a genuine host protein; effectors modify it, and RPM1/RPS2 sense that modification."},
+  {q:"What is a \"decoy\" in NLR biology?", opts:["A host protein that baits effectors but has no independent physiological role","An effector mimicking an NLR","A fake resistance gene","A nonfunctional pseudogene copy"], correct:0, explain:"ZED1 and RKS1, guarded by ZAR1, are classic decoys — dedicated purely to bait pathogen effectors."},
+  {q:"Which helper NLRs act downstream of TIR‑NLR sensors via EDS1–PAD4/SAG101?", opts:["NRG1 and ADR1","NRC2 and NRC3","Pik‑2 and RGA4","ZAR1 and Sr35"], correct:0, explain:"This is the TIR‑NLR/CCR‑NLR relay described in the review's NRG1/ADR1 network section."},
+  {q:"What does NRCX do?", opts:["Dampens signaling by NRC2 and NRC3","Activates NRC4 only","Binds effectors directly","Replaces Pik‑1's HMA domain"], correct:0, explain:"NRCX is a modulator NLR — closely related to the NRCs but unable to signal itself, tempering NRC2/3 instead."},
+  {q:"AvrPtoB suppresses helper NLR immunity mainly by...", opts:["Acting as an E3 ligase that degrades ADR1‑L1/L2","Binding NB‑ARC to block oligomerization","Acetylating the RPM1 complex","Cleaving PBS1"], correct:0, explain:"AvrPtoB has E3 ubiquitin ligase activity and tags ADR1‑L1 (and, more mildly, ADR1‑L2) for degradation."},
+  {q:"Which sensor NLR can rescue resistance against AvrPtoB by signaling through the unsuppressed helper ADR1?", opts:["SNC1","RPS5","Roq1","Sr35"], correct:0, explain:"SNC1 guards ADR1‑L1/L2; when AvrPtoB degrades them, SNC1 can still signal via plain ADR1, which AvrPtoB can't touch."},
+  {q:"In the \"resurrection\" bioengineering strategy, what was changed in NRC2 to evade SS15?", opts:["A single amino acid in the NB‑ARC domain","The entire LRR domain","The N‑terminal MADA motif","The promoter region"], correct:0, explain:"A single-amino-acid variant of NRC2 evaded SS15 inhibition while still responding to all tested upstream sensors — making it gene‑editing‑compatible."}
+];
+
+/* ======================= UTILITIES ======================= */
+const $ = id => document.getElementById(id);
+const shuffle = arr => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+function lsGet(k){ try{ const v = localStorage.getItem(k); return v === null ? null : JSON.parse(v); }catch(e){ return null; } }
+function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+let toastTimer = null;
+function toast(msg){ const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 3600); }
+function show(id, on){ const e = $(id); if(e) e.style.display = on ? "" : "none"; }
+
+/* ======================= PLAY DATA ======================= */
+const domainQuizPool = [
+  {q:"This part exchanges ADP for ATP to trigger the receptor's conformational change.", opts:["N‑terminal domain","NB‑ARC","LRR","Integrated Domain"], correct:1, explain:"That ADP→ATP swap in the NB‑ARC is the molecular switch at the heart of every NLR."},
+  {q:"This part often holds the receptor shut through autoinhibition.", opts:["N‑terminal domain","NB‑ARC","LRR","Integrated Domain"], correct:2, explain:"The LRR frequently keeps the receptor in check until an effector is perceived."},
+  {q:"This part dictates the downstream signaling pathway, and can be CC, CCR, CCG10, or TIR type.", opts:["N‑terminal domain","NB‑ARC","LRR","Integrated Domain"], correct:0, explain:"The four N‑terminal types define the broad classes of angiosperm NLRs."},
+  {q:"This part is present in up to 10% of NLRs and mimics a real effector target.", opts:["N‑terminal domain","NB‑ARC","LRR","Integrated Domain"], correct:3, explain:"That is the integrated decoy hypothesis in action."},
+  {q:"The MADA motif that helps punch the resistosome into the membrane sits in this part.", opts:["N‑terminal domain","NB‑ARC","LRR","Integrated Domain"], correct:0, explain:"MADA is found in the N‑terminal α1‑helix of many CC‑type NLRs."},
+  {q:"In Sr35, this part directly binds the effector AvrSr35.", opts:["N‑terminal domain","NB‑ARC","LRR","Integrated Domain"], correct:2, explain:"Direct‑binding NLRs like Sr35 typically use the LRR as the effector‑binding surface."},
+  {q:"The “NOD” of an NLR refers to this part.", opts:["N‑terminal domain","NB‑ARC","LRR","Integrated Domain"], correct:1, explain:"NOD (nucleotide‑binding and oligomerization domain) is another name for the NB‑ARC."},
+  {q:"In Pik‑1, this part sits between the N‑terminal domain and NB‑ARC — not at the very end.", opts:["N‑terminal domain","NB‑ARC","LRR","Integrated Domain"], correct:3, explain:"A reminder that integrated domains don't always sit C‑terminally, unlike in RGA5 or RRS1."}
+];
+
+const speciesData = [
+  {name:"Watermelon", lat:"Citrullus lanatus", count:50, bucket:"compact", note:"One of the smallest known NLR repertoires — a useful reminder of how much natural variation exists in R‑gene arsenal size."},
+  {name:"Papaya", lat:"Carica papaya", count:50, bucket:"compact", note:"A similarly compact NLR count to watermelon, despite being an unrelated lineage."},
+  {name:"Apple", lat:"Malus domestica", count:1000, bucket:"expanded", note:"Genome duplication and a long history of clonal propagation have let its NLR arsenal expand enormously."},
+  {name:"Hexaploid wheat", lat:"Triticum aestivum", count:1000, bucket:"expanded", note:"Wheat carries three sub‑genomes (A, B, D) — allopolyploidy alone can multiply gene counts, NLRs included."}
+];
+const statData = [
+  {big:"~500", label:"experimentally validated NLRs", note:"The RefPlantNLR collection — a curated snapshot of proven NLR domain architecture and function, though skewed toward a handful of crop and model species."},
+  {big:"~50%", label:"of Arabidopsis NLRs are clustered", note:"Tandem duplication and unequal crossing‑over pack many NLRs into tight genomic clusters, enabling rapid diversification."},
+  {big:"up to 10%", label:"of an NLRome carries an integrated domain", note:"These extra domains (HMA, WRKY, kinase…) mimic real pathogen targets to bait effectors."}
+];
+
+const recogItems = [
+  {label:"Sr35", bucket:"direct", explain:"Its LRR directly binds AvrSr35 — no host protein in between."},
+  {label:"RPP1", bucket:"direct", explain:"LRR + C‑JID directly bind the oomycete effector ATR1."},
+  {label:"Roq1", bucket:"direct", explain:"LRR + C‑JID directly bind the bacterial effector XopQ."},
+  {label:"Sw5‑b", bucket:"direct", explain:"Its LRR plus the Solanaceous domain directly bind the viral NSm protein."},
+  {label:"Pik‑1", bucket:"direct", explain:"The effector binds the integrated HMA domain — part of the receptor itself — so recognition is direct."},
+  {label:"RGA5", bucket:"direct", explain:"Effectors bind its integrated HMA domain directly."},
+  {label:"RRS1", bucket:"direct", explain:"Effectors interact with its integrated WRKY domain, which is part of the receptor."},
+  {label:"Prf", bucket:"guard", explain:"Prf guards the host kinase Pto and senses its interaction with effectors — it never touches the effector itself."},
+  {label:"RPS5", bucket:"guard", explain:"RPS5 guards the kinase PBS1 and senses its cleavage by the effector AvrPphB."},
+  {label:"RPM1", bucket:"guard", explain:"RPM1 guards RIN4 and senses its phosphorylation by effectors."},
+  {label:"RPS2", bucket:"guard", explain:"RPS2 guards RIN4 and senses its cleavage by AvrRpt2."},
+  {label:"ZAR1", bucket:"decoy", explain:"ZAR1 monitors the pseudokinase decoys ZED1 and RKS1, which exist to bait effectors."}
+];
+
+const archSvgs = {
+  singleton: {
+    caption: "One protein senses the pathogen <em>and</em> executes the immune response.",
+    svg: `<svg viewBox="0 0 320 140" width="100%" height="150"><circle cx="160" cy="68" r="46" fill="var(--moss)"/><text x="160" y="63" text-anchor="middle" fill="#fff" font-family="IBM Plex Mono" font-size="12">SINGLETON</text><text x="160" y="80" text-anchor="middle" fill="#fff" font-family="IBM Plex Mono" font-size="10" opacity="0.85">senses + signals</text></svg>`
+  },
+  pair: {
+    caption: "A sensor perceives the pathogen and activates a dedicated helper that executes the response; the two are typically genetically linked.",
+    svg: `<svg viewBox="0 0 320 140" width="100%" height="150"><defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="var(--ink)"/></marker></defs><circle cx="72" cy="68" r="38" fill="var(--sensor)"/><text x="72" y="72" text-anchor="middle" fill="#2a1c00" font-family="IBM Plex Mono" font-size="11">SENSOR</text><circle cx="248" cy="68" r="38" fill="var(--helper)"/><text x="248" y="72" text-anchor="middle" fill="#fff" font-family="IBM Plex Mono" font-size="11">HELPER</text><line x1="113" y1="68" x2="207" y2="68" stroke="var(--ink)" stroke-width="2" marker-end="url(#arrow)"/></svg>`
+  },
+  network: {
+    caption: "Several sensors converge on a few shared helpers (and a helper can serve several sensors) — trading tight linkage for redundancy and evolvability.",
+    svg: `<svg viewBox="0 0 320 150" width="100%" height="160"><defs><marker id="arrow2" markerWidth="8" markerHeight="8" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5 Z" fill="var(--line-strong)"/></marker></defs><g font-family="IBM Plex Mono" font-size="8" fill="#2a1c00"><circle cx="55" cy="22" r="15" fill="var(--sensor)"/><text x="55" y="25" text-anchor="middle">S1</text><circle cx="55" cy="58" r="15" fill="var(--sensor)"/><text x="55" y="61" text-anchor="middle">S2</text><circle cx="55" cy="94" r="15" fill="var(--sensor)"/><text x="55" y="97" text-anchor="middle">S3</text><circle cx="55" cy="130" r="15" fill="var(--sensor)"/><text x="55" y="133" text-anchor="middle">S4</text></g><g fill="#fff" font-family="IBM Plex Mono" font-size="10"><circle cx="255" cy="48" r="24" fill="var(--helper)"/><text x="255" y="52" text-anchor="middle">H1</text><circle cx="255" cy="104" r="24" fill="var(--helper)"/><text x="255" y="108" text-anchor="middle">H2</text></g><g stroke="var(--line-strong)" stroke-width="1.5" fill="none" marker-end="url(#arrow2)"><path d="M70,22 C150,22 170,40 228,46"/><path d="M70,58 C150,58 170,50 228,50"/><path d="M70,58 C150,58 170,95 228,100"/><path d="M70,94 C150,94 170,55 228,55"/><path d="M70,94 C150,94 170,100 228,102"/><path d="M70,130 C150,130 170,108 228,106"/></g></svg>`
+  }
+};
+const archItems = [
+  {label:"ZAR1", bucket:"singleton", explain:"ZAR1 senses its effectors (via decoys) and executes cell death entirely on its own."},
+  {label:"Sr35", bucket:"singleton", explain:"Sr35 binds AvrSr35 directly and forms its own resistosome — no helper needed."},
+  {label:"Pik‑1 / Pik‑2", bucket:"pair", explain:"A genetically linked sensor/helper duo, transcribed from a shared promoter."},
+  {label:"RGA5 / RGA4", bucket:"pair", explain:"Another linked pair — RGA5 represses RGA4 until it senses its effector."},
+  {label:"NRC network (Rx, Bs2, Cf‑4…)", bucket:"network", explain:"Dozens of sensors and cell‑surface receptors converge on a handful of shared NRC helpers."},
+  {label:"NRG1 / ADR1 network", bucket:"network", explain:"Multiple TIR‑NLR sensors relay through EDS1 complexes to these two shared CCR helpers."}
+];
+
+const specimens = [
+  {name:"ZAR1", role:"singleton", host:"<i>Arabidopsis</i>", back:"Indirectly recognizes multiple bacterial effectors via ZRK decoys. Forms a pentameric resistosome whose funnel inserts into the plasma membrane as a Ca²⁺ channel."},
+  {name:"Sr35", role:"singleton", host:"Wheat", back:"Binds the effector AvrSr35 directly via its LRR domain, relieving autoinhibition and triggering resistosome formation — a key stem‑rust resistance gene."},
+  {name:"Pik‑1", role:"sensor", host:"Rice", back:"Recognizes AVR‑Pik / AVR‑Mgk1 from the blast fungus via its integrated HMA domain. Cannot trigger cell death alone — needs its helper, Pik‑2."},
+  {name:"Pik‑2", role:"helper", host:"Rice", back:"Carries the MADA motif that Pik‑1 lost. Activated by Pik‑1; transcribed from a shared promoter with it — genetically linked, head‑to‑head."},
+  {name:"RGA4", role:"helper", host:"Rice", back:"Triggers cell death on its own when expressed alone. Kept in check by its sensor partner RGA5 until an effector is perceived — regulation by repression, not cooperation."},
+  {name:"NRC2 / 3 / 4", role:"helper", host:"Solanaceae", back:"Required by dozens of sensor NLRs and cell‑surface receptors (Rx, Bs2, Cf‑4, Ve1…). Uses an “activation‑and‑release” model: the sensor never oligomerizes — only the helper does."},
+  {name:"NRG1 / ADR1", role:"helper", host:"<i>Arabidopsis</i> and relatives", back:"CCR‑type helpers activated via EDS1–PAD4/SAG101 after a TIR‑NLR fires. Their resistosomes act as Ca²⁺ channels driving the hypersensitive response."},
+  {name:"NRCX", role:"modulator", host:"<i>Nicotiana benthamiana</i>", back:"Phylogenetically an NRC, but its MADA motif is broken — it can't signal. Instead it dampens NRC2/NRC3; silencing NRCX causes autoimmunity."},
+  {name:"RRS1", role:"sensor", host:"<i>Arabidopsis</i>", back:"Its C‑terminal WRKY‑like domain baits bacterial effectors AvrRps4 and PopP2. Genetically paired with RPS4, but still needs the unlinked helper NRG1 for full resistance."}
+];
+const modulators = [
+  {name:"NRG1C", role:"modulator", host:"<i>Arabidopsis</i>", back:"A truncated NLR lacking most of the NB‑ARC and the CCR domain — it can't act as a helper. Instead it competes with full‑length NRG1A/B for EDS1–SAG101, dampening their cell‑death signaling."},
+  {name:"NRCX", role:"modulator", host:"<i>Nicotiana benthamiana</i>", back:"Closely related to NRC2/NRC3 but its MADA motif is broken. Silencing NRCX causes autoimmunity — it normally keeps NRC2/NRC3 signaling in check."}
+];
+
+const pairs = [
+  {left:"Pik‑1", right:"Pik‑2", explain:"Pik‑1 binds blast‑fungus effectors via its HMA domain, then activates its genetically linked helper Pik‑2."},
+  {left:"RGA5", right:"RGA4", explain:"RGA5 keeps RGA4 repressed until it binds an effector — then releases RGA4 to signal."},
+  {left:"Rx (PVX resistance)", right:"NRC2 / NRC3 / NRC4", explain:"Rx is one of dozens of NRC‑network sensors that all converge on the same helper hub."},
+  {left:"RPP1", right:"NRG1 (via EDS1–PAD4/SAG101)", explain:"RPP1 is a TIR‑NLR — its resistosome acts as an enzyme whose product is sensed by EDS1 complexes, which then activate the CCR helper NRG1."},
+  {left:"SNC1", right:"ADR1", explain:"SNC1 guards ADR1‑L1/L2 from the bacterial effector AvrPtoB, and signals through the unsuppressed helper ADR1."},
+  {left:"ZAR1", right:"— none, it's a singleton —", explain:"ZAR1 combines sensing and signaling in one protein — no downstream helper required. This was the trap!"}
+];
+
+const resistosomeSteps = [
+  "Effector perception relieves LRR autoinhibition",
+  "ADP is released; ATP binds the NB‑ARC pocket",
+  "The conformational change drives oligomerization",
+  "Subunits assemble into a pentameric resistosome",
+  "The α1‑helix (MADA motif) flips outward, forming a funnel",
+  "The resistosome inserts into the plasma membrane",
+  "It acts as a Ca²⁺ channel, triggering the hypersensitive response"
+];
+
+const armsPairs = [
+  {left:"<b>SS15</b><span class=\"organism\"><i>Globodera rostochiensis</i> (potato cyst nematode)</span>", right:"Binds NRC2/NRC3's NB‑ARC domain, blocking oligomerization", explain:"SS15 immobilizes a hinge loop in the NB‑ARC domain, locking the helper in an inactive state."},
+  {left:"<b>AVRcap1b</b><span class=\"organism\"><i>Phytophthora infestans</i> (potato late blight pathogen, an oomycete)</span>", right:"Interacts with NbTOL9a, suppressing NRC2/NRC3 cell death", explain:"AVRcap1b hijacks a vesicle‑trafficking protein that acts as a negative regulator of NRC2/NRC3 — an indirect suppression route."},
+  {left:"<b>AvrPtoB</b><span class=\"organism\"><i>Pseudomonas syringae</i> (bacterial pathogen)</span>", right:"E3 ligase — ubiquitinates ADR1‑L1/L2 for degradation", explain:"AvrPtoB tags ADR1‑L1 (and, more mildly, ADR1‑L2) for degradation, but cannot touch plain ADR1."},
+  {left:"<b>HopZ3</b><span class=\"organism\"><i>Pseudomonas syringae</i> (bacterial pathogen)</span>", right:"Acetylates the RPM1 immune complex", explain:"This YopJ‑family acetyltransferase inactivates the RPM1 complex directly, promoting pathogen growth."},
+  {left:"<b>RHA1B</b><span class=\"organism\"><i>Globodera pallida</i> (root‑knot nematode)</span>", right:"E3 ubiquitin ligase — degrades NLRs generally", explain:"A nematode effector that tags NLR proteins themselves for degradation, rather than just blocking them."}
+];
+
+const pikoTargets = [{id:"gfp", name:"Anti‑GFP nanobody"},{id:"mcherry", name:"Anti‑mCherry nanobody"}];
+const pikoScenarios = [
+  {text:"<i>Potato virus X</i> engineered to carry GFP", resistantIf:"gfp", explain:"The pikobody's nanobody binds GFP directly — Pik‑2 fires and resistance holds, whichever pathogen carries the tag."},
+  {text:"<i>Potato virus X</i> engineered to carry mCherry", resistantIf:"mcherry", explain:"Only an anti‑mCherry pikobody recognizes this tag — an anti‑GFP one would see nothing here."},
+  {text:"Wild‑type <i>Potato virus X</i>, no fluorescent tag at all", resistantIf:null, explain:"No antigen, no recognition — a pikobody only responds to the tag its nanobody was built for."},
+  {text:"A completely different virus, also engineered to carry GFP", resistantIf:"gfp", explain:"Recognition is antigen‑specific, not pathogen‑specific — any GFP‑carrying pathogen triggers the same anti‑GFP pikobody."}
+];
+const nrc2Options = [
+  {label:"Mutate a residue in the NB‑ARC domain, where SS15 binds", correct:true, explain:"This is the real strategy — SS15 binds the HD1 region of NB‑ARC, so a substitution there blocks SS15 without stopping NRC2 from responding to its upstream sensors."},
+  {label:"Swap out the LRR domain", correct:false, explain:"SS15 doesn't bind the LRR — this wouldn't touch its inhibitory grip on NB‑ARC."},
+  {label:"Delete the MADA motif", correct:false, explain:"The MADA motif is required for NRC2 to signal at all — removing it breaks the helper entirely."},
+  {label:"Fuse on an extra decoy domain", correct:false, explain:"Decoys bait effectors for recognition — they don't protect an existing helper from an inhibitor already bound to it."}
+];
+const resurrectSensors = ["Rx","Bs2","Rpi‑amr1","Rpi‑amr3"];
+
+const unknownQs = [
+  {title:"How do integrated domains evolve?", q:"How do host domains get fused into NLRs in the first place, and how do they keep evolving alongside their cognate effectors and NLR scaffold?"},
+  {title:"What makes sensors and helpers compatible?", q:"How do NLR pairs and networks evolve, activate, and stay regulated? What determines whether a given sensor can productively signal through a given helper?"},
+  {title:"What happens after the calcium channel opens?", q:"CC‑ and CCR‑NLR resistosomes act as calcium channels — but what are the precise downstream mechanisms that turn that into programmed cell death?"},
+  {title:"How do cell‑surface and intracellular immunity talk?", q:"What is the molecular link between cell‑surface receptors and intracellular NLRs? How do these two immune layers coordinate?"},
+  {title:"Where do NLRs sit in the cell?", q:"What determines an NLR's sub‑cellular localization before and after activation, and what exactly are the membrane‑associated puncta some resistosomes form?"},
+  {title:"Is immunity tissue‑specific?", q:"Do plants mount NLR‑mediated responses in a cell‑type‑ or tissue‑specific way? Are there cell‑autonomous versus non‑cell‑autonomous NLR responses?"},
+  {title:"How much resistance is hidden?", q:"How prevalent are pathogen effectors that suppress NLR signaling — and how much cryptic disease resistance might crop genomes already carry, silently masked?"}
+];
+const knowCards = [
+  {q:"What kind of channel does the ZAR1 resistosome form in the plasma membrane?", known:true, answer:"A calcium (Ca²⁺) channel, formed by the funnel of a pentameric resistosome — resolved by Cryo‑EM."},
+  {q:"How does the nematode effector SS15 shut down NRC2 and NRC3?", known:true, answer:"It binds the NB‑ARC domain and blocks oligomerization."},
+  {q:"What does Pik‑1 need in order to trigger cell death?", known:true, answer:"Its helper, Pik‑2 — Pik‑1 cannot trigger cell death alone."},
+  {q:"What is the job of the integrated domain in an NLR‑ID?", known:true, answer:"It acts as bait, mimicking a host effector target so the effector binds the receptor."},
+  {q:"What do TIR‑NLR resistosomes do once assembled?", known:true, answer:"They act as enzymes, producing small molecules sensed by EDS1 complexes."},
+  {q:"How much does NLR gene number vary across plant species?", known:true, answer:"More than 20‑fold — from about 50 in watermelon and papaya to over 1,000 in apple and wheat."},
+  {q:"How can Pik‑1 be given a brand‑new recognition specificity?", known:true, answer:"By swapping its HMA domain for a nanobody — a “pikobody”."},
+  {q:unknownQs[0].q, known:false, openIdx:0},
+  {q:unknownQs[1].q, known:false, openIdx:1},
+  {q:unknownQs[2].q, known:false, openIdx:2},
+  {q:unknownQs[3].q, known:false, openIdx:3},
+  {q:unknownQs[4].q, known:false, openIdx:4},
+  {q:unknownQs[5].q, known:false, openIdx:5},
+  {q:unknownQs[6].q, known:false, openIdx:6}
+];
+
+/* ======================= SCORING MODEL ======================= */
+const ACT_MAX = {
+  domain: domainQuizPool.length * 100, genomes: speciesData.length * 100, recog: recogItems.length * 100,
+  classify: archItems.length * 100, matchmaker: pairs.length * 100, bonus: 300,
+  steps: resistosomeSteps.length * 100, arms: armsPairs.length * 100,
+  piko: pikoScenarios.length * 100, nrc2: 100, know: knowCards.length * 100,
+  quiz: Math.min(10, quizPool.length) * 100
+};
+const CHAPTERS = [
+  {tab:"anatomy", n:"1", name:"NLRchitecture", desc:"The tripartite domain architecture of an NLR", acts:["domain"]},
+  {tab:"diversity", n:"2", name:"Diversity", desc:"How many NLRs does a plant genome carry?", acts:["genomes"]},
+  {tab:"recognition", n:"3", name:"Recognition", desc:"Direct, guard–guardee and decoy recognition", acts:["recog"]},
+  {tab:"networks", n:"4", name:"NLR Types", desc:"Singletons, pairs and networks", acts:["classify","matchmaker","bonus"], optional:["bonus"]},
+  {tab:"activation", n:"5", name:"Activation", desc:"Resistosomes and the routes to cell death", acts:["steps"]},
+  {tab:"armsrace", n:"6", name:"Arms Race", desc:"How pathogens suppress NLRs", acts:["arms"]},
+  {tab:"engineering", n:"7", name:"Engineering", desc:"Pikobodies and a resurrected helper", acts:["piko","nrc2"]},
+  {tab:"frontier", n:"8", name:"Unknowns", desc:"What is solved — and what is still open", acts:["know"]}
+];
+const TAB_ORDER = CHAPTERS.map(c => c.tab);
+
+function emptyProgress(){ return {name:"", acts:{}, myHyp:{}}; }
+let progress = emptyProgress();
+
+function actDone(id){ return !!(progress.acts[id] && progress.acts[id].done); }
+function actScore(id){ return progress.acts[id] ? progress.acts[id].score : 0; }
+function chapterComplete(tab){
+  const c = CHAPTERS.find(x => x.tab === tab);
+  return c.acts.filter(a => !(c.optional || []).includes(a)).every(actDone);
+}
+function chapterPoints(c){ return c.acts.reduce((s, a) => s + actScore(a), 0); }
+function chapterMax(c){ return c.acts.reduce((s, a) => s + ACT_MAX[a], 0); }
+function totalPoints(){ return Object.keys(ACT_MAX).reduce((s, a) => s + actScore(a), 0); }
+function isUnlocked(tab){
+  if(tab === "home" || tab === "glossary") return true;
+  if(tab === "quiz") return chapterComplete("frontier");
+  const i = TAB_ORDER.indexOf(tab);
+  if(i <= 0) return true;
+  return chapterComplete(TAB_ORDER[i - 1]);
+}
+function lockedReason(tab){
+  if(tab === "quiz") return "Complete chapter 8 (Unknowns) to unlock the final quiz.";
+  const prev = CHAPTERS[TAB_ORDER.indexOf(tab) - 1];
+  return "Complete chapter " + prev.n + " (" + prev.name + ") first — answer every question in it to unlock this one.";
+}
+
+/* ======================= BACKEND (Firebase email sign-in, or local fallback) ======================= */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDjj2o-3HsmhAjyL16ja7G7BwfAZxlGI4E",
+  authDomain: "guardians-of-the-planta-65e9d.firebaseapp.com",
+  projectId: "guardians-of-the-planta-65e9d",
+  storageBucket: "guardians-of-the-planta-65e9d.firebasestorage.app",
+  messagingSenderId: "548528930112",
+  appId: "1:548528930112:web:a46b7c219bce8f55a38ea5"
+};
+const PKEY = name => "gp-progress::" + name.toLowerCase();
+const Backend = {
+  mode: "local", auth: null, fs: null, uid: null, unsubs: [],
+  board: [], myRank: null, hyps: [],
+  init(){
+    try{
+      if(!(window.firebase && /^https?:$/.test(location.protocol))) return;   // needs the SDK and a real web address
+      if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+      this.auth = firebase.auth(); this.fs = firebase.firestore(); this.mode = "firebase";
+    }catch(e){ this.mode = "local"; }
+  },
+  waitForUser(){
+    return new Promise(res => {
+      let done = false;
+      const t = setTimeout(() => { if(!done){ done = true; res(this.auth.currentUser || null); } }, 6000);
+      this.auth.onAuthStateChanged(u => { this.uid = u ? u.uid : null; if(!done){ done = true; clearTimeout(t); res(u); } });
+    });
+  },
+  isLink(){ try{ return this.mode === "firebase" && this.auth.isSignInWithEmailLink(location.href); }catch(e){ return false; } },
+  savedEmail(){ try{ return localStorage.getItem("gp-signin-email"); }catch(e){ return null; } },
+  async sendLink(email){
+    await this.auth.sendSignInLinkToEmail(email, {url: location.origin + location.pathname, handleCodeInApp: true});
+    try{ localStorage.setItem("gp-signin-email", email); }catch(e){}
+  },
+  async completeLink(email){
+    const cred = await this.auth.signInWithEmailLink(email, location.href);
+    try{ localStorage.removeItem("gp-signin-email"); }catch(e){}
+    try{ history.replaceState(null, "", location.pathname); }catch(e){}
+    this.uid = cred.user.uid;
+    return cred.user;
+  },
+  async signOut(){
+    this.unsubscribe();
+    try{ await this.auth.signOut(); }catch(e){}
+    this.uid = null; this.board = []; this.hyps = []; this.myRank = null;
+  },
+  async loadName(){
+    if(this.mode === "firebase"){
+      const s = await this.fs.doc("profiles/" + this.uid).get();
+      return s.exists ? s.data().username : null;
+    }
+    return lsGet("gp-last-name");
+  },
+  async claimUsername(name){
+    const uid = this.uid, key = name.toLowerCase();
+    await this.fs.runTransaction(async tx => {
+      const ref = this.fs.doc("usernames/" + key), s = await tx.get(ref);
+      if(s.exists && s.data().uid !== uid) throw new Error("username-taken");
+      tx.set(ref, {uid: uid});
+      tx.set(this.fs.doc("profiles/" + uid), {username: name});
+    });
+  },
+  async saveName(name){ if(this.mode === "local") lsSet("gp-last-name", name); },
+  async loadProgress(name){
+    if(this.mode === "firebase"){
+      try{ const s = await this.fs.doc("progress/" + this.uid).get(); if(s.exists) return s.data(); }catch(e){}
+      return null;
+    }
+    return lsGet(PKEY(name));
+  },
+  async saveProgress(p){
+    lsSet(PKEY(p.name), p);
+    if(this.mode === "firebase"){ try{ await this.fs.doc("progress/" + this.uid).set(p); }catch(e){} }
+  },
+  async publishScore(name, total){
+    if(this.mode === "firebase"){
+      try{ await this.fs.doc("leaderboard/" + this.uid).set({name: name, total: total, updated: Date.now()}); }catch(e){}
+      await this.refreshMyRank();
+    } else {
+      const lb = lsGet("gp-board") || {}; lb[name] = total; lsSet("gp-board", lb);
+    }
+  },
+  async saveHyps(name, answers){
+    if(this.mode === "firebase"){ try{ await this.fs.doc("hypotheses/" + this.uid).set({name: name, answers: answers, updated: Date.now()}); }catch(e){} }
+  },
+  subscribe(){
+    if(this.mode !== "firebase") return;
+    this.unsubscribe();
+    try{
+      this.unsubs.push(this.fs.collection("leaderboard").orderBy("total", "desc").limit(10).onSnapshot(snap => {
+        this.board = snap.docs.map(d => Object.assign({id: d.id}, d.data()));
+        this.refreshMyRank();
+      }, () => {}));
+      this.unsubs.push(this.fs.collection("hypotheses").orderBy("updated", "desc").limit(300).onSnapshot(snap => {
+        this.hyps = snap.docs.map(d => Object.assign({id: d.id}, d.data()));
+        renderWallOthers();
+      }, () => {}));
+    }catch(e){}
+  },
+  unsubscribe(){ this.unsubs.forEach(u => { try{ u(); }catch(e){} }); this.unsubs = []; },
+  async refreshMyRank(){
+    try{
+      const t = totalPoints();
+      if(t > 0){ const s = await this.fs.collection("leaderboard").where("total", ">", t).get(); this.myRank = s.size + 1; }
+      else this.myRank = null;
+    }catch(e){}
+    renderBoard();
+  }
+};
+
+let saveTimer = null;
+function persist(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    if(!progress.name) return;
+    await Backend.saveProgress(progress);
+    await Backend.publishScore(progress.name, totalPoints());
+    renderBoard();
+  }, 300);
+}
+
+function finishAct(id, score){
+  const before = CHAPTERS.map(c => chapterComplete(c.tab));
+  const prev = progress.acts[id];
+  progress.acts[id] = {score: prev ? Math.max(prev.score, score) : score, max: ACT_MAX[id], done: true};
+  persist();
+  refreshAll();
+  CHAPTERS.forEach((c, i) => {
+    if(!before[i] && chapterComplete(c.tab)){
+      toast(i < CHAPTERS.length - 1 ? "Chapter " + c.n + " complete! Chapter " + CHAPTERS[i + 1].n + " is now unlocked." : "Chapter 8 complete! The final quiz is now unlocked.");
+    }
+  });
+}
+
+/* ======================= NAV / HOME / PLAYER BAR ======================= */
+function goToTab(tab){
+  if(!isUnlocked(tab)){ toast(lockedReason(tab)); return; }
+  document.querySelectorAll("nav.tabs button").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  document.querySelector('nav.tabs button[data-tab="' + tab + '"]').classList.add("active");
+  $("panel-" + tab).classList.add("active");
+  window.scrollTo(0, 0);
+  if(tab === "home") renderHome();
+  if(tab === "quiz") renderBoard();
+}
+document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => goToTab(b.dataset.tab)));
+
+function renderNav(){
+  document.querySelectorAll("nav.tabs button").forEach(b => {
+    const un = isUnlocked(b.dataset.tab);
+    b.classList.toggle("locked", !un);
+    let lk = b.querySelector(".lk");
+    if(!un && !lk){ lk = document.createElement("span"); lk.className = "lk"; lk.textContent = " 🔒"; b.appendChild(lk); }
+    if(un && lk) lk.remove();
+  });
+}
+function pctClass(p){ return p >= 100 ? "pf-dgreen" : p > 70 ? "pf-lgreen" : p >= 50 ? "pf-orange" : "pf-red"; }
+function progCard(n, name, desc, locked, complete, pct, pts, max, noBar, onClick){
+  const el = document.createElement("div");
+  el.className = "prog-card" + (locked ? " locked" : "");
+  const status = noBar ? "REFERENCE · ALWAYS OPEN" : locked ? "🔒 LOCKED" : complete ? "COMPLETE" : "INCOMPLETE";
+  el.innerHTML = `<div class="n">${n}</div><h4>${name}</h4><p>${desc}</p><div class="status ${complete && !locked ? "complete" : ""}">${status}</div>` +
+    (noBar ? "" : `<div class="pbar"><div class="pfill ${pctClass(pct)}" style="width:${pct}%"></div></div><div class="pmeta">${pct}% · ${pts} / ${max} pts</div>`);
+  el.addEventListener("click", onClick);
+  return el;
+}
+const actPct = id => ACT_MAX[id] ? actScore(id) / ACT_MAX[id] * 100 : 0;
+const BADGES = [
+  {icon:"🧬", name:"Domain Architect", desc:"50%+ in Domain Detective", test:() => actDone("domain") && actPct("domain") >= 50},
+  {icon:"🌱", name:"Diversity Scout", desc:"50%+ in Sort the Genomes", test:() => actDone("genomes") && actPct("genomes") >= 50},
+  {icon:"🔍", name:"Recognition Detective", desc:"50%+ in Classify the Receptors", test:() => actDone("recog") && actPct("recog") >= 50},
+  {icon:"🗂️", name:"Type Classifier", desc:"50%+ in Classify the NLRs", test:() => actDone("classify") && actPct("classify") >= 50},
+  {icon:"🕸️", name:"Network Navigator", desc:"50%+ in the Sensor–Helper Matchmaker", test:() => actDone("matchmaker") && actPct("matchmaker") >= 50},
+  {icon:"⚙️", name:"Resistosome Engineer", desc:"50%+ in Resistosome Assembly", test:() => actDone("steps") && actPct("steps") >= 50},
+  {icon:"🛡️", name:"Effector Hunter", desc:"50%+ in Effector Match", test:() => actDone("arms") && actPct("arms") >= 50},
+  {icon:"🧪", name:"Pikobody Pro", desc:"50%+ in Build a pikobody", test:() => actDone("piko") && actPct("piko") >= 50},
+  {icon:"🔓", name:"Helper Resurrectionist", desc:"Engineered NRC2 correctly", test:() => actDone("nrc2") && actPct("nrc2") >= 50},
+  {icon:"❓", name:"Mystery Solver", desc:"50%+ in Solved or Still Open?", test:() => actDone("know") && actPct("know") >= 50},
+  {icon:"🧠", name:"Evolution Insider", desc:"Answered the 300-point bonus correctly", test:() => actDone("bonus") && actPct("bonus") >= 50},
+  {icon:"🏆", name:"Alphabet Soup Master", desc:"50%+ in the final quiz", test:() => actDone("quiz") && actPct("quiz") >= 50}
+];
+function renderHome(){
+  $("totalPts").textContent = totalPoints() + " pts";
+  const g = $("progGrid"); g.innerHTML = "";
+  CHAPTERS.forEach(c => {
+    const un = isUnlocked(c.tab), pts = chapterPoints(c), max = chapterMax(c);
+    g.appendChild(progCard(c.n, c.name, c.desc, !un, chapterComplete(c.tab), Math.round(pts / max * 100), pts, max, false, () => goToTab(c.tab)));
+  });
+  g.appendChild(progCard("✳", "NLRepertoire", "Every NLR named in the review, explained", false, false, 0, 0, 0, true, () => goToTab("glossary")));
+  const qun = isUnlocked("quiz");
+  g.appendChild(progCard("✳", "Final Quiz", "10 questions · 100 pts each", !qun, actDone("quiz"), Math.round(actScore("quiz") / ACT_MAX.quiz * 100), actScore("quiz"), ACT_MAX.quiz, false, () => goToTab("quiz")));
+  const bg = $("badgeGrid"); bg.innerHTML = "";
+  BADGES.forEach(b => {
+    const u = b.test(), el = document.createElement("div");
+    el.className = "badge" + (u ? " unlocked" : "");
+    el.innerHTML = `<div class="b-icon">${u ? b.icon : "🔒"}</div><div class="b-name">${b.name}</div><div class="b-desc">${b.desc}</div>`;
+    bg.appendChild(el);
+  });
+}
+function modeLabel(){
+  return Backend.mode === "firebase" ? ["Signed in · shared leaderboard", "shared"] : ["Local copy · scores stay in this browser", ""];
+}
+function renderPlayerbar(){
+  const bar = $("playerbar");
+  if(!progress.name){ bar.innerHTML = ""; return; }
+  const m = modeLabel();
+  bar.innerHTML = `<span>Player: <b>${esc(progress.name)}</b></span><span class="pill">${totalPoints()} pts</span><span class="pill ${m[1]}">${m[0]}</span><button id="changeName">${Backend.mode === "firebase" ? "Sign out" : "Change name"}</button>`;
+  $("changeName").onclick = async () => {
+    if(Backend.mode === "firebase"){
+      await Backend.signOut(); progress = emptyProgress(); initAllGames(); refreshAll(); goToTab("home"); showGate("email");
+    } else showGate("local", "", progress.name);
+  };
+}
+function applyGates(){
+  const gen = actDone("genomes"), cls = actDone("classify");
+  show("divReveal", gen); show("divLock", !gen);
+  show("cardsWrap", cls && !mmRunning); show("cardsLock", !cls);
+  show("mmWrap", cls); show("mmLock", !cls);
+  show("bonusWrap", actDone("matchmaker")); show("bonusLock", !actDone("matchmaker"));
+  show("wallWrap", actDone("know")); show("wallLock", !actDone("know"));
+}
+function refreshAll(){ renderNav(); renderHome(); renderPlayerbar(); applyGates(); renderBoard(); }
+
+/* ======================= GENERIC ACTIVITIES (one guess each) ======================= */
+function initMcq(cfg){
+  const box = $(cfg.mount), pts = cfg.points || 100;
+  const items = cfg.shuffleItems ? shuffle(cfg.items).slice(0, cfg.count || cfg.items.length) : cfg.items;
+  let idx = 0, score = 0;
+  function render(){
+    const it = items[idx];
+    box.innerHTML = `<div class="quiz-meta"><span>${cfg.label} ${idx + 1} / ${items.length}</span><span>POINTS ${score}</span></div><div class="quiz-q">${it.q}</div><div class="opts"></div><div class="quiz-explain" style="display:none"></div><div class="nextrow"></div>`;
+    const opts = box.querySelector(".opts");
+    it.opts.forEach((o, i) => {
+      const b = document.createElement("button");
+      b.className = "quiz-opt"; b.innerHTML = o;
+      b.onclick = () => answer(i, b);
+      opts.appendChild(b);
+    });
+  }
+  function answer(i, b){
+    const it = items[idx], all = box.querySelectorAll(".quiz-opt");
+    all.forEach(o => o.classList.add("disabled"));
+    const right = i === it.correct;
+    if(right){ b.classList.add("correct"); score += pts; } else { b.classList.add("wrong"); all[it.correct].classList.add("correct"); }
+    const ex = box.querySelector(".quiz-explain");
+    ex.style.display = "block"; ex.innerHTML = (right ? "✓ " : "✗ ") + it.explain;
+    if(cfg.single){
+      finishAct(cfg.actId, score);
+      ex.innerHTML += `<div class="best" style="margin-top:10px;">${right ? "+" + pts + " points" : "0 points"} · best on record: ${actScore(cfg.actId)} <button class="replay-btn">Replay (best score counts)</button></div>`;
+      ex.querySelector(".replay-btn").onclick = () => initMcq(cfg);
+      return;
+    }
+    const nx = document.createElement("button");
+    nx.className = "quiz-next";
+    nx.textContent = idx < items.length - 1 ? "Next →" : "See result →";
+    nx.onclick = () => { idx++; if(idx < items.length) render(); else done(); };
+    box.querySelector(".nextrow").appendChild(nx);
+  }
+  function done(){
+    finishAct(cfg.actId, score);
+    box.innerHTML = `<div class="quiz-done"><div class="mono dim" style="font-size:12px;">${cfg.doneLabel}</div><div class="big">${score} / ${items.length * pts}</div><div class="best">Best on record: ${actScore(cfg.actId)} points${cfg.showTotal ? " · Total so far: " + totalPoints() + " pts" : ""}</div><button class="quiz-next replay-btn" style="margin-left:0;">${cfg.replayLabel || "Replay (best score counts)"}</button></div>`;
+    box.querySelector(".replay-btn").onclick = () => initMcq(cfg);
+  }
+  render();
+}
+
+function initSortGame(cfg){
+  const pool = $(cfg.poolEl), bEl = $(cfg.bucketsEl), st = $(cfg.statusEl), ex = $(cfg.explainEl);
+  const total = cfg.items.length;
+  let picked = null, score = 0, answered = 0;
+  bEl.innerHTML = cfg.buckets.map(b => `<div class="bucket" data-bucket="${b.id}"><div class="bucket-head">${b.label}</div><div class="bucket-items"></div></div>`).join("");
+  pool.innerHTML = ""; ex.textContent = ""; st.textContent = "Points: 0 / " + total * 100;
+  shuffle(cfg.items.map((it, i) => Object.assign({idx: i}, it))).forEach(it => {
+    const chip = document.createElement("button");
+    chip.className = "chip"; chip.innerHTML = it.label;
+    chip.onclick = () => {
+      if(chip.classList.contains("answered")) return;
+      pool.querySelectorAll(".chip").forEach(c => c.classList.remove("picked"));
+      chip.classList.add("picked"); picked = {it: it, chip: chip}; ex.textContent = "";
+    };
+    pool.appendChild(chip);
+  });
+  bEl.querySelectorAll(".bucket").forEach(b => {
+    b.onclick = () => {
+      if(!picked) return;
+      const it = picked.it, chip = picked.chip; picked = null;
+      const right = it.bucket === b.dataset.bucket;
+      chip.classList.remove("picked"); chip.classList.add("answered", right ? "correct" : "wrong");
+      const target = bEl.querySelector('.bucket[data-bucket="' + it.bucket + '"]');
+      const tag = document.createElement("div"); tag.className = "bucket-tag"; tag.innerHTML = it.label;
+      target.querySelector(".bucket-items").appendChild(tag);
+      if(right) score += 100;
+      else {
+        b.classList.add("bucket-wrong"); target.classList.add("bucket-right");
+        setTimeout(() => { b.classList.remove("bucket-wrong"); target.classList.remove("bucket-right"); }, 1400);
+      }
+      ex.innerHTML = (right ? "✓ " : "✗ The correct bucket is highlighted in green. ") + it.explain;
+      answered++; st.textContent = "Points: " + score + " / " + total * 100;
+      if(answered === total){
+        if(cfg.beforeFinish) cfg.beforeFinish();
+        finishAct(cfg.actId, score);
+        const r = document.createElement("button"); r.className = "replay-btn"; r.textContent = "Replay (best score counts)";
+        r.onclick = () => initSortGame(cfg); st.appendChild(r);
+      }
+    };
+  });
+}
+
+function initMatch(cfg){
+  const L = $(cfg.leftCol), R = $(cfg.rightCol), st = $(cfg.statusEl), ex = $(cfg.explainEl);
+  const total = cfg.pairs.length;
+  let picked = null, score = 0, answered = 0;
+  L.innerHTML = ""; R.innerHTML = ""; ex.textContent = ""; st.textContent = "Points: 0 / " + total * 100;
+  const rightEls = {};
+  cfg.pairs.forEach((p, i) => {
+    const c = document.createElement("button");
+    c.className = "chip"; c.innerHTML = p.left; c.dataset.i = i;
+    c.onclick = () => {
+      if(c.classList.contains("answered")) return;
+      L.querySelectorAll(".chip").forEach(x => x.classList.remove("picked"));
+      c.classList.add("picked"); picked = i; ex.textContent = "";
+    };
+    L.appendChild(c);
+  });
+  shuffle(cfg.pairs.map((p, i) => i)).forEach(i => {
+    const c = document.createElement("button");
+    c.className = "chip"; c.innerHTML = cfg.pairs[i].right; rightEls[i] = c;
+    c.onclick = () => {
+      if(picked === null || c.classList.contains("answered")) return;
+      const li = picked; picked = null;
+      const lc = L.querySelector('.chip[data-i="' + li + '"]');
+      lc.classList.remove("picked"); lc.classList.add("answered");
+      if(li === i){
+        lc.classList.add("correct"); c.classList.add("correct", "answered"); score += 100;
+        ex.innerHTML = "✓ " + cfg.pairs[li].explain;
+      } else {
+        lc.classList.add("wrong"); c.classList.add("wrong");
+        setTimeout(() => c.classList.remove("wrong"), 900);
+        rightEls[li].classList.add("correct", "answered");
+        ex.innerHTML = "✗ The right match is now highlighted in green. " + cfg.pairs[li].explain;
+      }
+      answered++; st.textContent = "Points: " + score + " / " + total * 100;
+      if(answered === total){
+        if(cfg.beforeFinish) cfg.beforeFinish();
+        finishAct(cfg.actId, score);
+        const r = document.createElement("button"); r.className = "replay-btn"; r.textContent = "Replay (best score counts)";
+        r.onclick = cfg.replay || (() => initMatch(cfg)); st.appendChild(r);
+      }
+    };
+    R.appendChild(c);
+  });
+}
+
+/* ======================= CHAPTER 1 ======================= */
+const domainInfo = {
+  nbarc: {role:"The NB‑ARC domain (NOD)", text:"The molecular switch. Sits ADP‑bound and inactive until effector perception triggers ADP→ATP exchange, driving the conformational change that lets the receptor oligomerize into a resistosome."},
+  lrr: {role:"The leucine‑rich repeat (LRR / SSFR)", text:"Usually holds the receptor shut via intramolecular autoinhibition. In many direct‑recognition NLRs (Sr35, RPP1, Roq1) this is also where the effector is physically bound."},
+  id: {role:"Integrated domain (ID) — present in up to ~10% of NLRs", text:"A host‑derived module (often an HMA or a WRKY domain) fused into the receptor to bait pathogen effectors — the “integrated decoy hypothesis.” Its position varies — see below."}
+};
+const ntermTypes = {
+  CC: "Coiled‑coil. The most common N‑terminal type in angiosperms — found in singletons like ZAR1 and Sr35, and in many sensor/helper pairs.",
+  CCR: "RPW8‑type coiled‑coil. Marks the NRG1/ADR1 helper clade that acts downstream of TIR‑NLR sensors.",
+  CCG10: "A distinct coiled‑coil subtype — carried by receptors such as RPS2 and RPS5.",
+  TIR: "Toll/interleukin‑1 receptor‑type. TIR‑NLRs form tetrameric resistosomes that act as enzymes, producing small molecules sensed by downstream EDS1–PAD4/SAG101 complexes."
+};
+let currentNterm = "CC", currentIdPos = "afterLRR";
+Object.keys(ntermTypes).forEach((t, i) => {
+  const b = document.createElement("button"); b.textContent = t; if(i === 0) b.classList.add("active");
+  b.onclick = () => {
+    currentNterm = t;
+    document.querySelectorAll("#ntermToggle button").forEach(x => x.classList.remove("active"));
+    b.classList.add("active"); $("ntermLabel").textContent = t; showDomainInfo("nterm");
+  };
+  $("ntermToggle").appendChild(b);
+});
+function showDomainInfo(which){
+  document.querySelectorAll("#panel-anatomy .domain").forEach(d => d.classList.remove("selected"));
+  document.querySelector('#panel-anatomy .domain[data-domain="' + which + '"]').classList.add("selected");
+  if(which === "nterm"){ $("infoRole").textContent = "N‑terminal domain — currently: " + currentNterm; $("infoText").textContent = ntermTypes[currentNterm]; }
+  else { $("infoRole").textContent = domainInfo[which].role; $("infoText").textContent = domainInfo[which].text; }
+}
+document.querySelectorAll("#panel-anatomy .domain").forEach(d => d.addEventListener("click", () => showDomainInfo(d.dataset.domain)));
+showDomainInfo("nterm");
+const idPositions = {
+  afterLRR: {order:{nterm:0, nbarc:1, lrr:2, id:3}, caption:"Shown here: the RGA5 / RRS1 arrangement — the integrated domain sits at the very end, after the LRR."},
+  midChassis: {order:{nterm:0, id:1, nbarc:2, lrr:3}, caption:"Shown here: the Pik‑1 arrangement — its integrated HMA domain sits between the N‑terminal domain and NB‑ARC, nowhere near the end."}
+};
+[["afterLRR","After the LRR (RGA5, RRS1)"],["midChassis","Mid‑chassis (Pik‑1)"]].forEach(([key, label], i) => {
+  const b = document.createElement("button"); b.textContent = label; if(i === 0) b.classList.add("active");
+  b.onclick = () => {
+    currentIdPos = key;
+    document.querySelectorAll("#idPositionToggle button").forEach(x => x.classList.remove("active"));
+    b.classList.add("active"); applyIdPosition();
+  };
+  $("idPositionToggle").appendChild(b);
+});
+function applyIdPosition(){
+  const cfg = idPositions[currentIdPos];
+  Object.keys(cfg.order).forEach(k => { document.querySelector('#panel-anatomy .domain[data-domain="' + k + '"]').style.order = cfg.order[k]; });
+  $("idPositionCaption").textContent = cfg.caption;
+}
+applyIdPosition();
+
+/* ======================= CHAPTER 2 ======================= */
+const maxLog = Math.log10(1000);
+speciesData.forEach(s => {
+  const row = document.createElement("div"); row.className = "bar-row";
+  const w = (Math.log10(s.count) / maxLog * 100).toFixed(1);
+  row.innerHTML = `<div class="bar-name"><span class="click-name">${s.name}</span><span class="lat">${s.lat}</span></div><div class="bar-track"><div class="bar-fill" style="width:${w}%"></div></div><div class="bar-count mono">~${s.count}${s.count >= 1000 ? "+" : ""}</div>`;
+  row.onclick = () => { $("diversityInfo").innerHTML = `<div class="role">${s.name} — <i>${s.lat}</i></div><p>${s.note}</p>`; };
+  $("barChart").appendChild(row);
+});
+statData.forEach(s => {
+  const el = document.createElement("div"); el.className = "stat-card";
+  el.innerHTML = `<div class="big">${s.big}</div><div class="label">${s.label.replace("Arabidopsis", "<i>Arabidopsis</i>")}</div><div class="note">${s.note}</div>`;
+  $("statGrid").appendChild(el);
+});
+
+/* ======================= CHAPTER 4 ======================= */
+let currentArch = "singleton";
+[["singleton","Singleton"],["pair","Pair"],["network","Network"]].forEach(([key, label], i) => {
+  const b = document.createElement("button"); b.textContent = label; if(i === 0) b.classList.add("active");
+  b.onclick = () => {
+    currentArch = key;
+    document.querySelectorAll("#archToggle button").forEach(x => x.classList.remove("active"));
+    b.classList.add("active"); renderArch();
+  };
+  $("archToggle").appendChild(b);
+});
+function renderArch(){ $("diagramSvgWrap").innerHTML = archSvgs[currentArch].svg; $("diagramCaption").innerHTML = archSvgs[currentArch].caption; }
+renderArch();
+
+function flipCard(s){
+  const card = document.createElement("div"); card.className = "flip-card";
+  card.innerHTML = `<div class="flip-inner"><div class="flip-face front"><span class="role-chip ${s.role}">${s.role}</span><div><h4>${s.name}</h4><div class="host">${s.host}</div></div><span class="flip-hint">click to flip ↻</span></div><div class="flip-face back"><span class="role-chip ${s.role}">${s.role}</span><p>${s.back}</p><span class="flip-hint">click to flip back ↻</span></div></div>`;
+  card.onclick = () => card.classList.toggle("flipped");
+  return card;
+}
+specimens.forEach(s => $("specimenGrid").appendChild(flipCard(s)));
+modulators.forEach(s => $("modulatorGrid").appendChild(flipCard(s)));
+
+let mmRunning = false;
+function matchCfg(){
+  return {pairs: pairs, leftCol:"sensorCol", rightCol:"helperCol", statusEl:"matchStatus", explainEl:"matchExplain", actId:"matchmaker",
+    beforeFinish: () => { mmRunning = false; }, replay: startMatchmaker};
+}
+function startMatchmaker(){
+  mmRunning = true; show("cardsWrap", false); show("mmBoard", true);
+  $("mmStart").style.display = "none";
+  initMatch(matchCfg());
+}
+$("mmStart").onclick = startMatchmaker;
+
+/* ======================= CHAPTER 5 ======================= */
+function initSteps(){
+  const pool = $("stepPool"), seq = $("stepSequence"), st = $("stepStatus"), total = resistosomeSteps.length;
+  let placed = 0, score = 0;
+  pool.innerHTML = ""; seq.innerHTML = ""; st.textContent = "Points: 0 / " + total * 100;
+  resistosomeSteps.forEach((_, i) => {
+    const s = document.createElement("div"); s.className = "step-slot";
+    s.innerHTML = `<span class="num">${i + 1}.</span><span class="txt"></span>`; seq.appendChild(s);
+  });
+  shuffle(resistosomeSteps.map((t, i) => ({t: t, i: i}))).forEach(s => {
+    const chip = document.createElement("button");
+    chip.className = "step-chip"; chip.textContent = s.t; chip.dataset.i = s.i;
+    chip.onclick = () => {
+      if(chip.classList.contains("used")) return;
+      const slot = seq.children[placed];
+      if(s.i === placed){
+        chip.classList.add("used"); slot.classList.add("filled"); slot.querySelector(".txt").textContent = s.t; score += 100;
+      } else {
+        chip.classList.add("flash-wrong"); setTimeout(() => chip.classList.remove("flash-wrong"), 700);
+        pool.querySelector('.step-chip[data-i="' + placed + '"]').classList.add("used");
+        slot.classList.add("filled", "missed"); slot.querySelector(".txt").textContent = "✗ " + resistosomeSteps[placed];
+      }
+      placed++; st.textContent = "Points: " + score + " / " + total * 100;
+      if(placed === total){
+        finishAct("steps", score);
+        const r = document.createElement("button"); r.className = "replay-btn"; r.textContent = "Replay (best score counts)";
+        r.onclick = initSteps; st.appendChild(r);
+      }
+    };
+    pool.appendChild(chip);
+  });
+}
+
+/* ======================= CHAPTER 7 ======================= */
+function initPiko(){
+  let chosen = null, answered = 0, score = 0;
+  const row = $("targetRow"), wrap = $("pikoScenarios"), st = $("pikoStatus");
+  row.innerHTML = ""; wrap.innerHTML = ""; st.textContent = "";
+  $("pikoSlot").textContent = "HMA (unmodified)"; $("pikoSlot").classList.remove("filled");
+  pikoTargets.forEach(t => {
+    const chip = document.createElement("button"); chip.className = "target-chip"; chip.textContent = t.name;
+    chip.onclick = () => {
+      if(answered > 0 || chosen === t.id) return;
+      row.querySelectorAll(".target-chip").forEach(x => x.classList.remove("active"));
+      chip.classList.add("active"); chosen = t.id;
+      $("pikoSlot").textContent = t.name; $("pikoSlot").classList.add("filled");
+      renderScenarios();
+    };
+    row.appendChild(chip);
+  });
+  function renderScenarios(){
+    wrap.innerHTML = ""; st.textContent = "Points: " + score + " / " + pikoScenarios.length * 100;
+    pikoScenarios.forEach(sc => {
+      const div = document.createElement("div"); div.className = "scenario";
+      div.innerHTML = `<div class="s-text">${sc.text}</div><div class="s-opts"><button data-ans="yes">Resistant</button><button data-ans="no">Susceptible</button></div><div class="s-explain"></div>`;
+      div.querySelectorAll("button").forEach(btn => {
+        btn.onclick = () => {
+          const correctAns = sc.resistantIf === chosen ? "yes" : "no";
+          div.querySelectorAll(".s-opts button").forEach(b => b.classList.add("disabled"));
+          if(btn.dataset.ans === correctAns){ btn.classList.add("correct"); score += 100; }
+          else { btn.classList.add("wrong"); div.querySelector('.s-opts button[data-ans="' + correctAns + '"]').classList.add("correct"); }
+          const ex = div.querySelector(".s-explain"); ex.style.display = "block"; ex.textContent = sc.explain;
+          answered++; st.textContent = "Points: " + score + " / " + pikoScenarios.length * 100;
+          if(answered === pikoScenarios.length){
+            finishAct("piko", score);
+            const r = document.createElement("button"); r.className = "replay-btn"; r.textContent = "Replay (best score counts)";
+            r.onclick = initPiko; st.appendChild(r);
+          }
+        };
+      });
+      wrap.appendChild(div);
+    });
+  }
+}
+function renderSensorStatus(variant){
+  const grid = $("sensorStatusGrid"); grid.innerHTML = "";
+  resurrectSensors.forEach(name => {
+    const blocked = variant === "wt", el = document.createElement("div");
+    el.className = "sensor-status";
+    el.innerHTML = `<div class="name">${name}</div><div class="state ${blocked ? "blocked" : "active"}">${blocked ? "Blocked by SS15" : "Resistance active"}</div>`;
+    grid.appendChild(el);
+  });
+}
+function syncNrc2View(){
+  const eng = document.querySelector('#resurrectSwitch button[data-variant="eng"]');
+  eng.classList.toggle("locked", !actDone("nrc2"));
+  if(actDone("nrc2")){ $("nrc2Icon").textContent = "🔓"; $("nrc2StatusText").textContent = "Answered — compare the engineered NRC2 below"; }
+  else { $("nrc2Icon").textContent = "🔒"; $("nrc2StatusText").textContent = "NRC2 (wild‑type) — locked shut by SS15"; }
+}
+function initNrc2(){
+  const wrap = $("nrc2Options"); wrap.innerHTML = ""; $("nrc2Explain").textContent = "";
+  shuffle(nrc2Options).forEach(opt => {
+    const b = document.createElement("button"); b.className = "quiz-opt"; b.textContent = opt.label;
+    b.onclick = () => {
+      wrap.querySelectorAll(".quiz-opt").forEach(o => o.classList.add("disabled"));
+      if(opt.correct) b.classList.add("correct");
+      else { b.classList.add("wrong"); wrap.querySelectorAll(".quiz-opt").forEach(o => { if(o.textContent === nrc2Options[0].label) o.classList.add("correct"); }); }
+      $("nrc2Explain").innerHTML = (opt.correct ? "✓ " : "✗ The correct strategy is highlighted in green. ") + opt.explain;
+      finishAct("nrc2", opt.correct ? 100 : 0);
+      syncNrc2View();
+      const r = document.createElement("button"); r.className = "replay-btn"; r.textContent = "Replay (best score counts)";
+      r.onclick = initNrc2; $("nrc2Explain").appendChild(r);
+    };
+    wrap.appendChild(b);
+  });
+  syncNrc2View();
+}
+document.querySelectorAll("#resurrectSwitch button").forEach(btn => {
+  btn.onclick = () => {
+    if(btn.dataset.variant === "eng" && !actDone("nrc2")){ $("nrc2Explain").textContent = "Answer the question above first to unlock the engineered view."; return; }
+    document.querySelectorAll("#resurrectSwitch button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active"); renderSensorStatus(btn.dataset.variant);
+  };
+});
+renderSensorStatus("wt");
+
+/* ======================= CHAPTER 8: cards + hypothesis wall ======================= */
+function saveHyp(i, text){
+  progress.myHyp[i] = text;
+  persist();
+  Backend.saveHyps(progress.name, progress.myHyp);
+}
+function hypBox(i){
+  const box = document.createElement("div"); box.className = "hyp-box";
+  box.innerHTML = `<div class="mono dim" style="font-size:11.5px; margin-bottom:6px;">Optional — write your own hypothesis. It also appears on the hypothesis wall (visible to every signed-in player).</div><textarea maxlength="600"></textarea><button class="small-btn">Save</button><span class="save-flag"></span>`;
+  const ta = box.querySelector("textarea"); ta.value = (progress.myHyp && progress.myHyp[i]) || "";
+  box.querySelector(".small-btn").onclick = () => { saveHyp(i, ta.value.trim()); box.querySelector(".save-flag").textContent = "Saved ✓"; setTimeout(() => box.querySelector(".save-flag").textContent = "", 1600); const w = $("hyp-ta-" + i); if(w) w.value = ta.value.trim(); };
+  return box;
+}
+function initKnow(){
+  const box = $("knowBox"), cards = shuffle(knowCards);
+  let idx = 0, score = 0;
+  function render(){
+    const c = cards[idx];
+    box.innerHTML = `<div class="quiz-meta"><span>CARD ${idx + 1} / ${cards.length}</span><span>POINTS ${score}</span></div><div class="quiz-q">${c.q}</div><div class="know-btns"><button class="know-btn" data-k="1">✅ Solved</button><button class="know-btn" data-k="0">❓ Still open</button></div><div class="quiz-explain" style="display:none"></div><div class="nextrow"></div>`;
+    box.querySelectorAll(".know-btn").forEach(b => b.onclick = () => answer(b.dataset.k === "1", b));
+  }
+  function answer(saidSolved, b){
+    const c = cards[idx], right = saidSolved === c.known;
+    const btns = box.querySelectorAll(".know-btn");
+    btns.forEach(x => x.classList.add("disabled"));
+    if(right){ b.classList.add("correct"); score += 100; }
+    else { b.classList.add("wrong"); btns[c.known ? 0 : 1].classList.add("correct"); }
+    const ex = box.querySelector(".quiz-explain"); ex.style.display = "block";
+    ex.innerHTML = (right ? "✓ " : "✗ ") + (c.known ? "<b>Solved.</b> " + c.answer : "<b>Still open</b> — this is open question " + (c.openIdx + 1) + " of the review's seven.");
+    if(!c.known) ex.appendChild(hypBox(c.openIdx));
+    const nx = document.createElement("button"); nx.className = "quiz-next";
+    nx.textContent = idx < cards.length - 1 ? "Next card →" : "See result →";
+    nx.onclick = () => { idx++; if(idx < cards.length) render(); else done(); };
+    box.querySelector(".nextrow").appendChild(nx);
+  }
+  function done(){
+    finishAct("know", score);
+    box.innerHTML = `<div class="quiz-done"><div class="mono dim" style="font-size:12px;">ALL CARDS SORTED</div><div class="big">${score} / ${cards.length * 100}</div><div class="best">Best on record: ${actScore("know")} points · the hypothesis wall is now open below</div><button class="quiz-next replay-btn" style="margin-left:0;">Replay (best score counts)</button></div>`;
+    box.querySelector(".replay-btn").onclick = initKnow;
+  }
+  render();
+}
+function buildWall(){
+  const wrap = $("wallList"); wrap.innerHTML = "";
+  unknownQs.forEach((q, i) => {
+    const item = document.createElement("div"); item.className = "wall-item";
+    item.innerHTML = `<h4>${i + 1}. ${q.title}</h4><p class="wq">${q.q}</p><textarea id="hyp-ta-${i}" maxlength="600" placeholder="Your hypothesis…"></textarea><button class="small-btn">Save my hypothesis</button><span class="save-flag"></span><div class="wall-others" id="hyp-others-${i}"></div>`;
+    const ta = item.querySelector("textarea"); ta.value = (progress.myHyp && progress.myHyp[i]) || "";
+    item.querySelector(".small-btn").onclick = () => { saveHyp(i, ta.value.trim()); item.querySelector(".save-flag").textContent = "Saved ✓"; setTimeout(() => item.querySelector(".save-flag").textContent = "", 1600); };
+    wrap.appendChild(item);
+  });
+  $("wallNote").textContent = Backend.mode === "firebase"
+    ? "Every signed-in player can read these, and posts show your username."
+    : "You are on a local copy: hypotheses are saved in this browser only. Use the hosted version to share them.";
+  renderWallOthers();
+}
+function renderWallOthers(){
+  unknownQs.forEach((q, i) => {
+    const el = $("hyp-others-" + i); if(!el) return;
+    const others = Backend.hyps.filter(h => h.id !== Backend.uid && h.answers && h.answers[i]).sort((a, b) => (b.updated || 0) - (a.updated || 0));
+    el.innerHTML = others.length ? others.map(h => `<div class="wall-post"><b>${esc(h.name || "Player")}</b>${esc(h.answers[i])}</div>`).join("") : `<div class="dim" style="font-size:12.5px;">${Backend.mode === "local" ? "" : "No other hypotheses yet."}</div>`;
+  });
+}
+
+/* ======================= LEADERBOARD ======================= */
+function renderBoard(){
+  const body = $("boardBody"); if(!body) return;
+  let top, meRow = null;
+  if(Backend.mode === "firebase"){
+    $("boardNote").textContent = "Top 10 players by total points across all chapters and the final quiz.";
+    top = Backend.board.map(r => ({name: r.name, total: r.total || 0, me: r.id === Backend.uid}));
+    top.forEach(r => { r.rank = 1 + top.filter(o => o.total > r.total).length; });   // ties share a rank
+    meRow = top.find(r => r.me) || null;
+    if(!meRow && Backend.myRank && totalPoints() > 0) meRow = {name: progress.name, total: totalPoints(), rank: Backend.myRank, me: true};
+  } else {
+    const lb = lsGet("gp-board") || {};
+    const rows = Object.keys(lb).map(n => ({name: n, total: lb[n], me: n === progress.name}));
+    rows.sort((a, b) => b.total - a.total);
+    rows.forEach(r => { r.rank = 1 + rows.filter(o => o.total > r.total).length; });
+    top = rows.slice(0, 10); meRow = rows.find(r => r.me) || null;
+    $("boardNote").textContent = "Local copy: this board ranks players on this device only. The hosted version has the shared leaderboard.";
+  }
+  const line = r => `<tr class="${r.me ? "me" : ""}"><td>#${r.rank}</td><td>${esc(r.name)}${r.me ? " (you)" : ""}</td><td class="pts">${r.total}</td></tr>`;
+  let html = "";
+  if(top.length || meRow){
+    html = `<table class="board-table"><tr><th>RANK</th><th>PLAYER</th><th style="text-align:right;">POINTS</th></tr>${top.map(line).join("")}`;
+    if(meRow && !top.includes(meRow)) html += `<tr class="gap"><td colspan="3">· · ·</td></tr>${line(meRow)}`;
+    html += `</table>`;
+    if(!meRow) html += `<div class="dim" style="margin-top:10px; font-size:13px;">You are not ranked yet — finish a practical to join the board.</div>`;
+  } else html = `<div class="dim">No scores yet — be the first.</div>`;
+  body.innerHTML = html;
+}
+
+/* ======================= NLREPERTOIRE ======================= */
+nlrepertoire.forEach(entry => {
+  const item = document.createElement("div"); item.className = "repertoire-item";
+  item.innerHTML = `<button class="repertoire-name"><span class="arrow">›</span>${entry.name}</button><div class="repertoire-detail">${entry.detail}</div>`;
+  item.querySelector(".repertoire-name").onclick = () => item.classList.toggle("open");
+  $("repertoireList").appendChild(item);
+});
+
+/* ======================= GAME WIRING ======================= */
+function initAllGames(){
+  mmRunning = false;
+  initMcq({mount:"domainQuizBox", items:domainQuizPool, shuffleItems:true, actId:"domain", label:"CLUE", doneLabel:"DOMAIN DETECTIVE COMPLETE"});
+  initSortGame({poolEl:"diversityPool", bucketsEl:"diversityBuckets", statusEl:"diversityStatus", explainEl:"diversityExplain", actId:"genomes",
+    buckets:[{id:"compact", label:"Compact NLRome (~50 genes)"},{id:"expanded", label:"Expanded NLRome (>1,000 genes)"}],
+    items: speciesData.map(s => ({label: s.name + " <i>(" + s.lat + ")</i>", bucket: s.bucket, explain: s.note}))});
+  initSortGame({poolEl:"recogPool", bucketsEl:"recogBuckets", statusEl:"recogStatus", explainEl:"recogExplain", actId:"recog",
+    buckets:[{id:"direct", label:"Direct recognition"},{id:"guard", label:"Indirect: guard–guardee"},{id:"decoy", label:"Indirect: decoy"}], items: recogItems});
+  initSortGame({poolEl:"archPool", bucketsEl:"archBuckets", statusEl:"archStatus", explainEl:"archExplain", actId:"classify",
+    buckets:[{id:"singleton", label:"Singleton"},{id:"pair", label:"Pair"},{id:"network", label:"Network"}], items: archItems});
+  $("mmBoard").style.display = "none"; $("mmStart").style.display = "";
+  initMcq({mount:"bonusBox", single:true, points:300, actId:"bonus", label:"BONUS", doneLabel:"BONUS",
+    items:[{q:"The evolution of NLRs from singletons to sensors and helpers in pairs and networks represent ______ events.",
+      opts:["Gain of function","Loss of function","Epigenetic regulation","Horizontal gene transfer"], correct:1,
+      explain:"Sensors lost the ability to oligomerize and trigger cell death, while helpers lost the ability to directly recognize pathogen effectors."}]});
+  initSteps();
+  initMatch({pairs: armsPairs, leftCol:"effectorCol", rightCol:"targetCol", statusEl:"armsStatus", explainEl:"armsExplain", actId:"arms"});
+  initPiko(); initNrc2(); initKnow();
+  initMcq({mount:"quizBox", items:quizPool, shuffleItems:true, count:10, actId:"quiz", label:"QUESTION", doneLabel:"FINAL QUIZ COMPLETE", showTotal:true, replayLabel:"Play again (best score counts)"});
+  buildWall();
+}
+
+/* ======================= SIGN-IN & BOOT ======================= */
+const GATE_STEPS = ["Loading", "Email", "Sent", "Confirm", "Name", "Local"];
+function showGate(step, msg, prefill){
+  $("gate").classList.add("show");
+  GATE_STEPS.forEach(s => { $("g" + s).style.display = (s.toLowerCase() === step) ? "" : "none"; });
+  $("gMsg").textContent = msg || "";
+  const inputs = {email: "gEmailInput", confirm: "gConfirmInput", name: "gNameInput", local: "gLocalInput"};
+  if(inputs[step]){ if(prefill !== undefined) $(inputs[step]).value = prefill; setTimeout(() => $(inputs[step]).focus(), 50); }
+}
+function friendlyAuthError(e){
+  const c = (e && (e.code || e.message)) || "";
+  if(c.includes("invalid-email")) return "That email address doesn't look right.";
+  if(c.includes("unauthorized-continue-uri") || c.includes("unauthorized-domain")) return "This website address isn't authorized in Firebase yet (Authentication → Settings → Authorized domains).";
+  if(c.includes("operation-not-allowed")) return "Email-link sign-in isn't switched on in Firebase yet (Authentication → Sign-in method).";
+  if(c.includes("quota")) return "Too many sign-in emails were requested today. Please try again later.";
+  if(c.includes("expired-action-code") || c.includes("invalid-action-code")) return "That sign-in link has expired or was already used. Please request a new one.";
+  if(c.includes("network")) return "Network problem — check your connection and try again.";
+  return "Something went wrong (" + (c || "unknown") + "). Please try again.";
+}
+async function startSession(name){
+  const saved = await Backend.loadProgress(name);
+  progress = Object.assign(emptyProgress(), saved || {});
+  progress.acts = progress.acts || {}; progress.myHyp = progress.myHyp || {};
+  progress.name = name;
+  await Backend.saveName(name);
+  $("gate").classList.remove("show");
+  initAllGames(); refreshAll(); persist();
+  Backend.subscribe();
+  goToTab("home");
+}
+async function afterAuth(){
+  const name = await Backend.loadName();
+  if(name) await startSession(name); else showGate("name", "", "");
+}
+$("gEmailGo").onclick = async () => {
+  const email = $("gEmailInput").value.trim();
+  if(!email || !email.includes("@")){ $("gMsg").textContent = "Please type a valid email address."; return; }
+  $("gEmailGo").disabled = true; $("gMsg").textContent = "Sending…";
+  try{
+    await Backend.sendLink(email);
+    $("gSentText").textContent = "We sent a sign-in link to " + email + ". Open it on this device to continue (check your spam folder if it doesn't arrive).";
+    showGate("sent");
+  }catch(e){ showGate("email", friendlyAuthError(e)); }
+  $("gEmailGo").disabled = false;
+};
+$("gSentBack").onclick = () => showGate("email", "", "");
+$("gConfirmGo").onclick = async () => {
+  const email = $("gConfirmInput").value.trim();
+  if(!email){ $("gMsg").textContent = "Please type the email address the link was sent to."; return; }
+  try{ await Backend.completeLink(email); await afterAuth(); }
+  catch(e){ showGate("confirm", friendlyAuthError(e)); }
+};
+$("gNameGo").onclick = async () => {
+  const name = $("gNameInput").value.trim();
+  if(!/^[A-Za-z0-9_-]{3,20}$/.test(name)){ $("gMsg").textContent = "Usernames use 3–20 letters, numbers, _ or - (no spaces)."; return; }
+  $("gNameGo").disabled = true; $("gMsg").textContent = "Checking…";
+  try{ await Backend.claimUsername(name); await startSession(name); }
+  catch(e){
+    const c = (e && (e.code || e.message)) || "";
+    showGate("name", c.includes("username-taken") ? "That username is taken — please try another." : c.includes("permission") ? "Couldn't save the username — the Firestore rules may not be published yet." : friendlyAuthError(e));
+  }
+  $("gNameGo").disabled = false;
+};
+$("gLocalGo").onclick = async () => {
+  const raw = $("gLocalInput").value.trim().slice(0, 24);
+  if(!raw){ $("gMsg").textContent = "Please type a username to start."; return; }
+  await startSession(raw);
+};
+[["gEmailInput","gEmailGo"],["gConfirmInput","gConfirmGo"],["gNameInput","gNameGo"],["gLocalInput","gLocalGo"]].forEach(([i, b]) => $(i).addEventListener("keydown", e => { if(e.key === "Enter") $(b).click(); }));
+
+(async function boot(){
+  initAllGames(); refreshAll();
+  Backend.init();
+  if(Backend.mode === "firebase"){
+    showGate("loading");
+    if(Backend.isLink()){
+      const em = Backend.savedEmail();
+      if(em){
+        try{ await Backend.completeLink(em); await afterAuth(); }
+        catch(e){ showGate("email", friendlyAuthError(e)); }
+      } else showGate("confirm");
+      return;
+    }
+    const user = await Backend.waitForUser();
+    if(user) await afterAuth(); else showGate("email");
+  } else {
+    const name = await Backend.loadName();
+    if(name) await startSession(name); else showGate("local");
+  }
+})();
+</script>
+</body>
+</html>
